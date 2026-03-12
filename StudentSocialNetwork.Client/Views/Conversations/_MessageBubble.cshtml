@@ -1,0 +1,27 @@
+<article class="message-item" data-message-id="0">
+    <div class="message-avatar-wrap">
+        <div class="message-avatar avatar" data-role="avatar">U</div>
+    </div>
+
+    <div class="message-stack">
+        <div class="message-meta-row">
+            <span class="message-sender">Sender</span>
+            <span class="message-time">now</span>
+        </div>
+
+        <div class="message-reply d-none"></div>
+
+        <div class="message-bubble">Message content</div>
+
+        <div class="message-attachments mt-1"></div>
+
+        <div class="message-reactions mt-1"></div>
+
+        <div class="message-actions" data-role="actions">
+            <button type="button" class="message-action-btn" data-action="react">React</button>
+            <button type="button" class="message-action-btn" data-action="reply">Reply</button>
+            <button type="button" class="message-action-btn" data-action="pin">Pin</button>
+            @await Html.PartialAsync("_ReactionBar")
+        </div>
+    </div>
+</article>

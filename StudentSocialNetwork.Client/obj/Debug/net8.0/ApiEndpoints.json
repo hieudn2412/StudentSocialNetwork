@@ -1,0 +1,344 @@
+[
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.AuthApiController",
+    "Method": "Logout",
+    "RelativePath": "api/auth/logout",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "StudentSocialNetwork.Client.Controllers.Api.AuthApiController\u002BLogoutRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.AuthApiController",
+    "Method": "Me",
+    "RelativePath": "api/auth/me",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.AuthApiController",
+    "Method": "RefreshToken",
+    "RelativePath": "api/auth/refresh-token",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "StudentSocialNetwork.Client.Controllers.Api.AuthApiController\u002BRefreshTokenRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.ConversationsApiController",
+    "Method": "GetConversations",
+    "RelativePath": "api/conversations",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.ConversationsApiController",
+    "Method": "CreateGroupConversation",
+    "RelativePath": "api/conversations",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "StudentSocialNetwork.Client.Controllers.Api.ConversationsApiController\u002BCreateGroupConversationRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.ConversationsApiController",
+    "Method": "LeaveConversation",
+    "RelativePath": "api/conversations/{conversationId}/leave",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "conversationId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.ConversationsApiController",
+    "Method": "AddMember",
+    "RelativePath": "api/conversations/{conversationId}/members",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "conversationId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "StudentSocialNetwork.Client.Controllers.Api.ConversationsApiController\u002BAddConversationMemberRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.ConversationsApiController",
+    "Method": "RemoveMember",
+    "RelativePath": "api/conversations/{conversationId}/members/{memberUserId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "conversationId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "memberUserId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.ConversationsApiController",
+    "Method": "CreatePrivateConversation",
+    "RelativePath": "api/conversations/private",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "StudentSocialNetwork.Client.Controllers.Api.ConversationsApiController\u002BCreatePrivateConversationRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.FilesApiController",
+    "Method": "Upload",
+    "RelativePath": "api/files/upload",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "files",
+        "Type": "System.Collections.Generic.List\u00601[[Microsoft.AspNetCore.Http.IFormFile, Microsoft.AspNetCore.Http.Features, Version=8.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.MessagesApiController",
+    "Method": "SendMessage",
+    "RelativePath": "api/messages",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "StudentSocialNetwork.Client.Controllers.Api.MessagesApiController\u002BSendMessageRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.MessagesApiController",
+    "Method": "GetMessages",
+    "RelativePath": "api/messages/{conversationId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "conversationId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "cursor",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "limit",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.MessagesApiController",
+    "Method": "GetPinnedMessages",
+    "RelativePath": "api/messages/{conversationId}/pinned",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "conversationId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.MessagesApiController",
+    "Method": "MarkAsRead",
+    "RelativePath": "api/messages/{conversationId}/read",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "conversationId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.MessagesApiController",
+    "Method": "SetPin",
+    "RelativePath": "api/messages/pin",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "StudentSocialNetwork.Client.Controllers.Api.MessagesApiController\u002BPinRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.MessagesApiController",
+    "Method": "SetReaction",
+    "RelativePath": "api/messages/reaction",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "StudentSocialNetwork.Client.Controllers.Api.MessagesApiController\u002BReactionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.UsersApiController",
+    "Method": "UploadAvatar",
+    "RelativePath": "api/users/avatar",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "ContentType",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "ContentDisposition",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Headers",
+        "Type": "Microsoft.AspNetCore.Http.IHeaderDictionary",
+        "IsRequired": false
+      },
+      {
+        "Name": "Length",
+        "Type": "System.Int64",
+        "IsRequired": false
+      },
+      {
+        "Name": "Name",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "FileName",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.UsersApiController",
+    "Method": "UpdateProfile",
+    "RelativePath": "api/users/profile",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "StudentSocialNetwork.Client.Controllers.Api.UsersApiController\u002BUpdateProfileRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentSocialNetwork.Client.Controllers.Api.UsersApiController",
+    "Method": "SearchUsers",
+    "RelativePath": "api/users/search",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "q",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "limit",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

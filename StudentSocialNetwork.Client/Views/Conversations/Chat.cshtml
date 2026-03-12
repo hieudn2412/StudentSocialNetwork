@@ -1,0 +1,15 @@
+@model StudentSocialNetwork.Client.Models.ViewModels.ChatPageViewModel
+@{
+    ViewData["Title"] = "Chat";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/chat-messenger.css" asp-append-version="true" />
+}
+
+@await Html.PartialAsync("_ChatShell", Model)
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script type="module" src="~/js/chat-ui.js" asp-append-version="true"></script>
+}

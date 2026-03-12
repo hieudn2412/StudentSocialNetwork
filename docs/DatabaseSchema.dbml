@@ -1,0 +1,125 @@
+Project ChatService {
+  database_type: "MSSQL"
+}
+
+Table Users {
+  Id int [pk, increment]
+  Username nvarchar(100)
+  Email nvarchar(255) [unique]
+  AvatarUrl nvarchar(500)
+  Bio nvarchar(500)
+  Status nvarchar(20)
+  CreatedAt datetime
+  LastActiveAt datetime
+}
+
+Table ExternalAccounts {
+  Id int [pk, increment]
+  UserId int
+  Provider nvarchar(50)
+  ProviderUserId nvarchar(255)
+  AccessToken nvarchar(1000)
+  CreatedAt datetime
+}
+
+Table Conversations {
+  Id int [pk, increment]
+  Type nvarchar(20)
+  Name nvarchar(255)
+  AvatarUrl nvarchar(500)
+  CreatedBy int
+  CreatedAt datetime
+  LastMessageId bigint
+  LastMessageAt datetime
+}
+
+Table ConversationMembers {
+  Id int [pk, increment]
+  ConversationId int
+  UserId int
+  Role nvarchar(20)
+  JoinedAt datetime
+  LeftAt datetime
+  LastReadMessageId bigint
+  MutedUntil datetime
+}
+
+Table Messages {
+  Id bigint [pk, increment]
+  ConversationId int
+  SenderId int
+  Content nvarchar(max)
+  MessageType nvarchar(20)
+  ReplyToMessageId bigint
+  CreatedAt datetime
+  EditedAt datetime
+  DeletedAt datetime
+}
+
+Table MessageAttachments {
+  Id bigint [pk, increment]
+  MessageId bigint
+  FileUrl nvarchar(500)
+  FileName nvarchar(255)
+  FileType nvarchar(50)
+  FileSize bigint
+}
+
+Table MessageReactions {
+  Id bigint [pk, increment]
+  MessageId bigint
+  UserId int
+  ReactionType nvarchar(20)
+  CreatedAt datetime
+}
+
+Table MessageReads {
+  Id bigint [pk, increment]
+  MessageId bigint
+  UserId int
+  SeenAt datetime
+}
+
+Table PinnedMessages {
+  Id bigint [pk, increment]
+  ConversationId int
+  MessageId bigint
+  PinnedBy int
+  PinnedAt datetime
+}
+
+Table ConversationSettings {
+  Id bigint [pk, increment]
+  ConversationId int
+  UserId int
+  IsMuted bit
+  IsArchived bit
+  Theme nvarchar(50)
+  NotificationLevel nvarchar(50)
+}
+
+Ref: ExternalAccounts.UserId > Users.Id
+
+Ref: Conversations.CreatedBy > Users.Id
+
+Ref: ConversationMembers.UserId > Users.Id
+Ref: ConversationMembers.ConversationId > Conversations.Id
+
+Ref: Messages.ConversationId > Conversations.Id
+Ref: Messages.SenderId > Users.Id
+Ref: Messages.ReplyToMessageId > Messages.Id
+
+Ref: MessageAttachments.MessageId > Messages.Id
+
+Ref: MessageReactions.MessageId > Messages.Id
+Ref: MessageReactions.UserId > Users.Id
+
+Ref: MessageReads.MessageId > Messages.Id
+Ref: MessageReads.UserId > Users.Id
+
+Ref: PinnedMessages.MessageId > Messages.Id
+Ref: PinnedMessages.ConversationId > Conversations.Id
+Ref: PinnedMessages.PinnedBy > Users.Id
+
+Ref: ConversationSettings.ConversationId > Conversations.Id
+Ref: ConversationSettings.UserId > Users.Id

@@ -1,0 +1,203 @@
+@model StudentSocialNetwork.Client.Models.ViewModels.ChatPageViewModel
+
+<div id="chat-app"
+     class="messenger-app container-fluid py-3"
+     data-backend-base-url="@Model.BackendBaseUrl"
+     data-hub-endpoint="@Model.HubEndpoint"
+     data-initial-conversation-id="@(Model.ConversationId?.ToString() ?? string.Empty)">
+    <div class="row g-3 messenger-shell">
+        <aside class="col-12 col-lg-3">
+            <section class="messenger-panel messenger-left-panel h-100">
+                <header class="messenger-panel-header px-3 pt-3 pb-2">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h1 class="h5 mb-0">Chats</h1>
+                        <span class="text-muted small">Messenger UI</span>
+                    </div>
+                </header>
+
+                <div class="px-3 pb-2">
+                    <div class="user-search-box position-relative">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white">New chat</span>
+                            <input id="user-search-input" class="form-control" type="search" placeholder="Search users by name or email" autocomplete="off" />
+                        </div>
+                        <div id="user-search-results" class="user-search-results d-none"></div>
+                    </div>
+                </div>
+
+                <div class="px-3 pb-2 border-bottom">
+                    <div class="input-group input-group-sm mb-2">
+                        <span class="input-group-text bg-white">Filter</span>
+                        <input id="conversation-search-input" class="form-control" type="search" placeholder="Filter conversations" />
+                    </div>
+
+                    <div class="accordion accordion-flush" id="conversation-create-accordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="group-create-heading">
+                                <button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#group-create-panel" aria-expanded="false" aria-controls="group-create-panel">
+                                    New group chat
+                                </button>
+                            </h2>
+                            <div id="group-create-panel" class="accordion-collapse collapse" aria-labelledby="group-create-heading" data-bs-parent="#conversation-create-accordion">
+                                <div class="accordion-body pt-2">
+                                    <form id="create-group-form" class="row g-2">
+                                        <div class="col-12">
+                                            <input id="group-name" class="form-control form-control-sm" type="text" placeholder="Group name" />
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="user-search-box position-relative">
+                                                <input id="group-member-search-input" class="form-control form-control-sm" type="search" placeholder="Search members by name or email" autocomplete="off" />
+                                                <div id="group-member-search-results" class="user-search-results d-none"></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div id="group-member-selected" class="group-member-selected"></div>
+                                            <div class="form-text">Select members for the new group.</div>
+                                        </div>
+                                        <div class="col-12 d-grid">
+                                            <button class="btn btn-sm btn-success" type="submit">Create group</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="conversation-list" class="conversation-list flex-grow-1"></div>
+            </section>
+        </aside>
+
+        <section class="col-12 col-lg-6">
+            <section class="messenger-panel messenger-center-panel h-100">
+                <header class="messenger-panel-header px-3 py-2 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2 min-w-0">
+                        <div id="active-conversation-avatar" class="avatar avatar-lg">C</div>
+                        <div class="min-w-0">
+                            <h2 id="active-conversation-name" class="h6 mb-0 text-truncate">Select a conversation</h2>
+                            <p id="active-conversation-meta" class="text-muted small mb-0 text-truncate"></p>
+                        </div>
+                    </div>
+                    <button id="leave-conversation-btn" class="btn btn-outline-danger btn-sm" type="button">Leave</button>
+                </header>
+
+                <button id="new-messages-indicator" class="btn btn-primary btn-sm new-messages-indicator d-none" type="button">
+                    New messages
+                </button>
+
+                <div id="message-scroll-region" class="message-scroll-region">
+                    <div id="older-loading-indicator" class="older-loading-indicator d-none">Loading older messages...</div>
+                    <div id="message-list" class="message-list"></div>
+                </div>
+
+                <div class="px-3 pt-1 pb-2">
+                    @await Html.PartialAsync("_TypingIndicator")
+                </div>
+
+                <div id="reply-banner" class="mx-3 mb-2 alert alert-secondary py-2 px-3 d-none">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="text-truncate">Replying to <span id="reply-preview" class="fw-semibold"></span></div>
+                        <button id="clear-reply-btn" type="button" class="btn btn-link btn-sm p-0">Clear</button>
+                    </div>
+                </div>
+
+                <form id="message-form" class="message-composer border-top p-3">
+                    <div id="pending-attachments" class="pending-attachments d-flex flex-wrap gap-2 mb-2"></div>
+
+                    <div class="d-flex align-items-end gap-2">
+                        <button id="composer-emoji-button" class="btn btn-light composer-icon-btn" type="button" aria-label="Insert emoji">🙂</button>
+                        <button id="composer-attach-button" class="btn btn-light composer-icon-btn" type="button" aria-label="Attach files">📎</button>
+                        <textarea id="message-input" class="form-control composer-input" rows="1" placeholder="Type a message"></textarea>
+                        <button type="submit" class="btn btn-primary">Send</button>
+                    </div>
+
+                    <input id="message-files" type="file" multiple class="d-none" />
+
+                    <div id="composer-emoji-picker" class="emoji-picker d-none mt-2" role="menu" aria-label="Emoji picker">
+                        <button type="button" class="emoji-btn" data-emoji="😀">😀</button>
+                        <button type="button" class="emoji-btn" data-emoji="😁">😁</button>
+                        <button type="button" class="emoji-btn" data-emoji="😂">😂</button>
+                        <button type="button" class="emoji-btn" data-emoji="😍">😍</button>
+                        <button type="button" class="emoji-btn" data-emoji="🥰">🥰</button>
+                        <button type="button" class="emoji-btn" data-emoji="👍">👍</button>
+                        <button type="button" class="emoji-btn" data-emoji="❤️">❤️</button>
+                        <button type="button" class="emoji-btn" data-emoji="😮">😮</button>
+                        <button type="button" class="emoji-btn" data-emoji="😢">😢</button>
+                        <button type="button" class="emoji-btn" data-emoji="😡">😡</button>
+                    </div>
+                </form>
+            </section>
+        </section>
+
+        <aside class="col-12 col-lg-3">
+            <section class="messenger-panel messenger-right-panel h-100">
+                <header class="messenger-panel-header px-3 py-3">
+                    <h2 class="h6 mb-0">Conversation Info</h2>
+                </header>
+
+                <div class="conversation-info-body px-3 py-3">
+                    <section class="conversation-info-card mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div id="info-conversation-avatar" class="avatar avatar-lg">C</div>
+                            <div>
+                                <div id="info-conversation-name" class="fw-semibold">No conversation selected</div>
+                                <div id="info-conversation-type" class="small text-muted">-</div>
+                            </div>
+                        </div>
+                        <div class="small text-muted mt-2">Created: <span id="info-conversation-created-at">-</span></div>
+                    </section>
+
+                    <section class="conversation-members mb-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h3 class="h6 mb-0">Members</h3>
+                            <span id="member-count-badge" class="badge text-bg-secondary">0</span>
+                        </div>
+                        <div id="member-list" class="member-list"></div>
+
+                        <div id="member-management-panel" class="mt-3">
+                            <form id="add-member-form" class="row g-2">
+                                <div class="col-8">
+                                    <input id="add-member-user-id" class="form-control form-control-sm" type="number" min="1" placeholder="User ID" />
+                                </div>
+                                <div class="col-4 d-grid">
+                                    <button type="submit" class="btn btn-sm btn-outline-success">Add</button>
+                                </div>
+                            </form>
+
+                            <form id="remove-member-form" class="row g-2 mt-2">
+                                <div class="col-8">
+                                    <input id="remove-member-user-id" class="form-control form-control-sm" type="number" min="1" placeholder="User ID" />
+                                </div>
+                                <div class="col-4 d-grid">
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">Remove</button>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+
+                    <section class="conversation-pinned">
+                        <h3 class="h6 mb-2">Pinned messages</h3>
+                        <div id="pinned-message-list" class="pinned-message-list"></div>
+                    </section>
+                </div>
+            </section>
+        </aside>
+    </div>
+
+    <template id="conversation-item-template">
+        @await Html.PartialAsync("_ConversationItem")
+    </template>
+
+    <template id="user-search-result-template">
+        @await Html.PartialAsync("_UserSearchResult")
+    </template>
+
+    <template id="message-bubble-template">
+        @await Html.PartialAsync("_MessageBubble")
+    </template>
+
+    <template id="reaction-bar-template">
+        @await Html.PartialAsync("_ReactionBar")
+    </template>
+</div>
+

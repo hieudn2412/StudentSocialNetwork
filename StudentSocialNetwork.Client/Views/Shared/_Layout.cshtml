@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - StudentSocialNetwork</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/StudentSocialNetwork.Client.styles.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="app-body">
+    <header class="border-bottom bg-white">
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-semibold" href="/conversations">Student Social Network</a>
+
+                <div class="d-flex align-items-center gap-2">
+                    <a id="nav-login-link" class="btn btn-outline-primary btn-sm" href="/auth/login">Login</a>
+
+                    <div id="nav-auth-menu" class="dropdown d-none">
+                        <button class="btn btn-light btn-sm dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img id="nav-profile-avatar" class="rounded-circle" src="" alt="Avatar" width="26" height="26" />
+                            <span id="nav-profile-name" class="fw-semibold">Account</span>
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                            <li><a class="dropdown-item" href="/settings">Settings</a></li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li><button id="nav-logout-button" class="dropdown-item text-danger" type="button">Logout</button></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        @RenderBody()
+    </main>
+
+    <div id="toast-container" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script type="module" src="~/js/auth.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

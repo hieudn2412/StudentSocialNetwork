@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "StudentSocialNetwork.Api\\StudentSocialNetwork.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "StudentSocialNetwork.Client\\StudentSocialNetwork.Client.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
