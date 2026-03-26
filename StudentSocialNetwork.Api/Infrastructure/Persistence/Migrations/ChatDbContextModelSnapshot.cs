@@ -403,6 +403,180 @@ namespace StudentSocialNetwork.Api.Infrastructure.Persistence.Migrations
                     b.ToTable("RefreshTokens", (string)null);
                 });
 
+            modelBuilder.Entity("StudentSocialNetwork.Api.Domain.Entities.Social.Comment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+
+                    b.Property<int>("AuthorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("PostId", "CreatedAt")
+                        .IsDescending(false, true);
+
+                    b.ToTable("Comments", (string)null);
+                });
+
+            modelBuilder.Entity("StudentSocialNetwork.Api.Domain.Entities.Social.Follow", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FollowerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FollowingId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FollowingId");
+
+                    b.HasIndex("FollowerId", "FollowingId")
+                        .IsUnique();
+
+                    b.ToTable("Follows", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Follows_Follower_Following", "[FollowerId] <> [FollowingId]");
+                        });
+                });
+
+            modelBuilder.Entity("StudentSocialNetwork.Api.Domain.Entities.Social.Like", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId", "UserId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "CreatedAt")
+                        .IsDescending(false, true);
+
+                    b.ToTable("Likes", (string)null);
+                });
+
+            modelBuilder.Entity("StudentSocialNetwork.Api.Domain.Entities.Social.Post", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+
+                    b.Property<int>("AuthorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Hashtags")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId", "CreatedAt")
+                        .IsDescending(false, true);
+
+                    b.HasIndex("Status", "CreatedAt")
+                        .IsDescending(false, true);
+
+                    b.ToTable("Posts", (string)null);
+                });
+
+            modelBuilder.Entity("StudentSocialNetwork.Api.Domain.Entities.Social.UserProfile", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ClassName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FullName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Interests")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Major")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("Profiles", (string)null);
+                });
+
             modelBuilder.Entity("StudentSocialNetwork.Api.Domain.Entities.User", b =>
                 {
                     b.Property<int>("Id")
@@ -411,29 +585,29 @@ namespace StudentSocialNetwork.Api.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AvatarUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Bio")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<DateTime>("LastActiveAt")
-                        .HasColumnType("datetime");
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
-                    b.Property<string>("Status")
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -443,6 +617,9 @@ namespace StudentSocialNetwork.Api.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("Username")
                         .IsUnique();
 
                     b.ToTable("Users", (string)null);
@@ -635,6 +812,85 @@ namespace StudentSocialNetwork.Api.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("StudentSocialNetwork.Api.Domain.Entities.Social.Comment", b =>
+                {
+                    b.HasOne("StudentSocialNetwork.Api.Domain.Entities.User", "Author")
+                        .WithMany("Comments")
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StudentSocialNetwork.Api.Domain.Entities.Social.Post", "Post")
+                        .WithMany("Comments")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Post");
+                });
+
+            modelBuilder.Entity("StudentSocialNetwork.Api.Domain.Entities.Social.Follow", b =>
+                {
+                    b.HasOne("StudentSocialNetwork.Api.Domain.Entities.User", "Follower")
+                        .WithMany("Following")
+                        .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StudentSocialNetwork.Api.Domain.Entities.User", "Following")
+                        .WithMany("Followers")
+                        .HasForeignKey("FollowingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Follower");
+
+                    b.Navigation("Following");
+                });
+
+            modelBuilder.Entity("StudentSocialNetwork.Api.Domain.Entities.Social.Like", b =>
+                {
+                    b.HasOne("StudentSocialNetwork.Api.Domain.Entities.Social.Post", "Post")
+                        .WithMany("Likes")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("StudentSocialNetwork.Api.Domain.Entities.User", "User")
+                        .WithMany("Likes")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("StudentSocialNetwork.Api.Domain.Entities.Social.Post", b =>
+                {
+                    b.HasOne("StudentSocialNetwork.Api.Domain.Entities.User", "Author")
+                        .WithMany("Posts")
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("StudentSocialNetwork.Api.Domain.Entities.Social.UserProfile", b =>
+                {
+                    b.HasOne("StudentSocialNetwork.Api.Domain.Entities.User", "User")
+                        .WithOne("Profile")
+                        .HasForeignKey("StudentSocialNetwork.Api.Domain.Entities.Social.UserProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("StudentSocialNetwork.Api.Domain.Entities.Conversation", b =>
                 {
                     b.Navigation("Members");
@@ -661,8 +917,17 @@ namespace StudentSocialNetwork.Api.Infrastructure.Persistence.Migrations
                     b.Navigation("Replies");
                 });
 
+            modelBuilder.Entity("StudentSocialNetwork.Api.Domain.Entities.Social.Post", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("Likes");
+                });
+
             modelBuilder.Entity("StudentSocialNetwork.Api.Domain.Entities.User", b =>
                 {
+                    b.Navigation("Comments");
+
                     b.Navigation("ConversationMembers");
 
                     b.Navigation("ConversationSettings");
@@ -671,11 +936,21 @@ namespace StudentSocialNetwork.Api.Infrastructure.Persistence.Migrations
 
                     b.Navigation("ExternalAccounts");
 
+                    b.Navigation("Followers");
+
+                    b.Navigation("Following");
+
+                    b.Navigation("Likes");
+
                     b.Navigation("MessageReactions");
 
                     b.Navigation("MessageReads");
 
                     b.Navigation("PinnedMessages");
+
+                    b.Navigation("Posts");
+
+                    b.Navigation("Profile");
 
                     b.Navigation("RefreshTokens");
 

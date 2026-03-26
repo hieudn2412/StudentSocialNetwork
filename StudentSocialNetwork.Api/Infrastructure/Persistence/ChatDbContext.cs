@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using StudentSocialNetwork.Api.Domain.Entities;
 using StudentSocialNetwork.Api.Infrastructure.Persistence.Configurations;
+using StudentSocialNetwork.Api.Infrastructure.Persistence.Social.Configurations;
+using StudentSocialNetwork.Api.Domain.Entities.Social;
 
 namespace StudentSocialNetwork.Api.Infrastructure.Persistence;
 
@@ -22,10 +24,16 @@ public class ChatDbContext : DbContext
     public DbSet<PinnedMessage> PinnedMessages => Set<PinnedMessage>();
     public DbSet<ConversationSetting> ConversationSettings => Set<ConversationSetting>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<UserProfile> Profiles => Set<UserProfile>();
+    public DbSet<Post> Posts => Set<Post>();
+    public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<Like> Likes => Set<Like>();
+    public DbSet<Follow> Follows => Set<Follow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyChatModelConfigurations();
+        modelBuilder.ApplySocialModelConfigurations();
     }
 }

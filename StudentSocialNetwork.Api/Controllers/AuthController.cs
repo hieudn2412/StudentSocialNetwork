@@ -7,9 +7,6 @@ using StudentSocialNetwork.Api.Application.Interfaces.Services;
 
 namespace StudentSocialNetwork.Api.Controllers;
 
-/// <summary>
-/// Handles authentication and identity-related endpoints.
-/// </summary>
 [ApiController]
 [Route("api/auth")]
 public class AuthController : ControllerBase
@@ -21,20 +18,32 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
-    /// <summary>
-    /// Authenticates a user and returns access and refresh tokens.
-    /// </summary>
-    [HttpPost("login")]
-    [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login([FromBody] LoginRequestDto request, CancellationToken cancellationToken)
+    [HttpPost("register")]
+    [ProducesResponseType(typeof(ApiResponse<AuthTokenDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<AuthTokenDto>>> Register([FromBody] RegisterDto request, CancellationToken cancellationToken)
     {
-        var response = await _authService.LoginAsync(request, GetClientIpAddress(), cancellationToken);
-        return Ok(ApiResponse.Ok(response, "Login successful."));
+        var response = await _authService.RegisterAsync(request, cancellationToken);
+        return Ok(ApiResponse.Ok(response, "Đăng ký thành công."));
     }
 
-    /// <summary>
-    /// Authenticates a user with external identity provider credentials.
-    /// </summary>
+    [HttpPost("login")]
+    [ProducesResponseType(typeof(ApiResponse<AuthTokenDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<AuthTokenDto>>> Login([FromBody] LoginDto request, CancellationToken cancellationToken)
+    {
+        var response = await _authService.LoginAsync(request, cancellationToken);
+        return Ok(ApiResponse.Ok(response, "Đăng nhập thành công."));
+    }
+
+    [Authorize]
+    [HttpPut("change-password")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<object>>> ChangePassword([FromBody] ChangePasswordDto request, CancellationToken cancellationToken)
+    {
+        await _authService.ChangePasswordAsync(GetCurrentUserId(), request, cancellationToken);
+        return Ok(ApiResponse.Ok<object>(new { }, "Đổi mật khẩu thành công."));
+    }
+
+    // Legacy chat-auth endpoints kept for backward compatibility.
     [HttpPost("external-login")]
     [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> ExternalLogin([FromBody] ExternalLoginRequestDto request, CancellationToken cancellationToken)
@@ -43,9 +52,6 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse.Ok(response, "External login successful."));
     }
 
-    /// <summary>
-    /// Rotates refresh token and returns a new access/refresh token pair.
-    /// </summary>
     [HttpPost("refresh-token")]
     [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> RefreshToken([FromBody] RefreshTokenRequestDto request, CancellationToken cancellationToken)
@@ -54,9 +60,6 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse.Ok(response, "Token refreshed successfully."));
     }
 
-    /// <summary>
-    /// Revokes refresh token(s) for the current user.
-    /// </summary>
     [Authorize]
     [HttpPost("logout")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
@@ -66,9 +69,6 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse.Ok<object>(new { }, "Logout successful."));
     }
 
-    /// <summary>
-    /// Returns the current authenticated user profile.
-    /// </summary>
     [Authorize]
     [HttpGet("me")]
     [ProducesResponseType(typeof(ApiResponse<CurrentUserDto>), StatusCodes.Status200OK)]

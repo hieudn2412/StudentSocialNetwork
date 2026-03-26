@@ -3,6 +3,7 @@ using System.Text;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -14,7 +15,9 @@ using StudentSocialNetwork.Api.Application.Interfaces.Repositories;
 using StudentSocialNetwork.Api.Application.Interfaces.Security;
 using StudentSocialNetwork.Api.Application.Interfaces.Services;
 using StudentSocialNetwork.Api.Application.Services;
+using StudentSocialNetwork.Api.Application.Services.Social;
 using StudentSocialNetwork.Api.Application.Validators.Auth;
+using StudentSocialNetwork.Api.Domain.Entities;
 using StudentSocialNetwork.Api.Infrastructure.Persistence;
 using StudentSocialNetwork.Api.Infrastructure.Realtime;
 using StudentSocialNetwork.Api.Infrastructure.Repositories;
@@ -164,11 +167,18 @@ builder.Services.AddScoped<IRefreshTokenHasher, Sha256RefreshTokenHasher>();
 builder.Services.AddScoped<IRefreshTokenGenerator, SecureRefreshTokenGenerator>();
 builder.Services.AddScoped<IRefreshTokenLifetimeProvider, RefreshTokenLifetimeProvider>();
 builder.Services.AddScoped<IChatRealtimePublisher, SignalRChatRealtimePublisher>();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<IConversationService, ConversationService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IFollowService, FollowService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
 var app = builder.Build();
 

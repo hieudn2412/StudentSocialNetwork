@@ -2,6 +2,7 @@ using StudentSocialNetwork.Api.Application.DTOs.Auth;
 using StudentSocialNetwork.Api.Application.DTOs.Users;
 using StudentSocialNetwork.Api.Application.Interfaces.Repositories;
 using StudentSocialNetwork.Api.Application.Interfaces.Services;
+using StudentSocialNetwork.Api.Domain.Entities.Social;
 
 namespace StudentSocialNetwork.Api.Application.Services;
 
@@ -33,15 +34,17 @@ public class UserProfileService : IUserProfileService
             ? normalizedUsername
             : normalizedUsername[..100];
 
-        var normalizedBio = request.Bio?.Trim();
-        user.Bio = string.IsNullOrWhiteSpace(normalizedBio)
-            ? null
-            : (normalizedBio.Length <= 500 ? normalizedBio : normalizedBio[..500]);
+        var now = DateTime.UtcNow;
+        user.UpdatedAt = now;
 
-        if (!string.IsNullOrWhiteSpace(request.AvatarUrl))
-        {
-            user.AvatarUrl = request.AvatarUrl.Trim();
-        }
+        var profile = EnsureProfile(user, now);
+        profile.FullName = NormalizeNullable(request.FullName, 200);
+        profile.Bio = NormalizeNullable(request.Bio, 1000);
+        profile.AvatarUrl = NormalizeNullable(request.AvatarUrl, 1000);
+        profile.ClassName = NormalizeNullable(request.ClassName, 100);
+        profile.Major = NormalizeNullable(request.Major, 150);
+        profile.Interests = NormalizeNullable(request.Interests, 2000);
+        profile.UpdatedAt = now;
 
         _userRepository.Update(user);
         await _userRepository.SaveChangesAsync(cancellationToken);
@@ -59,7 +62,12 @@ public class UserProfileService : IUserProfileService
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
             ?? throw new KeyNotFoundException("User not found.");
 
-        user.AvatarUrl = avatarUrl.Trim();
+        var now = DateTime.UtcNow;
+        user.UpdatedAt = now;
+
+        var profile = EnsureProfile(user, now);
+        profile.AvatarUrl = avatarUrl.Trim();
+        profile.UpdatedAt = now;
 
         _userRepository.Update(user);
         await _userRepository.SaveChangesAsync(cancellationToken);
@@ -82,7 +90,7 @@ public class UserProfileService : IUserProfileService
                 UserId = x.Id,
                 Username = x.Username,
                 Email = x.Email,
-                AvatarUrl = x.AvatarUrl
+                AvatarUrl = x.Profile?.AvatarUrl
             })
             .ToList();
     }
@@ -104,11 +112,16 @@ public class UserProfileService : IUserProfileService
             UserId = user.Id,
             Username = user.Username,
             Email = user.Email,
-            AvatarUrl = user.AvatarUrl,
-            Bio = user.Bio,
-            Status = user.Status,
+            FullName = user.Profile?.FullName,
+            AvatarUrl = user.Profile?.AvatarUrl,
+            Bio = user.Profile?.Bio,
+            ClassName = user.Profile?.ClassName,
+            Major = user.Profile?.Major,
+            Interests = user.Profile?.Interests,
+            Role = user.Role,
+            IsActive = user.IsActive,
             CreatedAt = user.CreatedAt,
-            LastActiveAt = user.LastActiveAt,
+            UpdatedAt = user.UpdatedAt,
             AccountProvider = accountProvider,
             ConnectedProviders = connectedProviders
         };
@@ -123,5 +136,33 @@ public class UserProfileService : IUserProfileService
             "facebook" => "Facebook",
             _ => provider
         };
+    }
+
+    private static UserProfile EnsureProfile(Domain.Entities.User user, DateTime now)
+    {
+        if (user.Profile is not null)
+        {
+            return user.Profile;
+        }
+
+        user.Profile = new UserProfile
+        {
+            UserId = user.Id,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        return user.Profile;
+    }
+
+    private static string? NormalizeNullable(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
     }
 }

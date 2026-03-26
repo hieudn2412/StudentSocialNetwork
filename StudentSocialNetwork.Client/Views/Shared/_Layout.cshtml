@@ -1,3 +1,4 @@
+@using System.Security.Claims
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,42 +10,85 @@
     <link rel="stylesheet" href="~/StudentSocialNetwork.Client.styles.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="app-body">
-    <header class="border-bottom bg-white">
-        <nav class="navbar navbar-expand-lg">
-            <div class="container-fluid">
-                <a class="navbar-brand fw-semibold" href="/conversations">Student Social Network</a>
+<body>
+    <header class="border-bottom bg-white mb-4">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white">
+            <div class="container">
+                <a class="navbar-brand fw-bold" href="/">StudentSocialNetwork</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-                <div class="d-flex align-items-center gap-2">
-                    <a id="nav-login-link" class="btn btn-outline-primary btn-sm" href="/auth/login">Login</a>
+                <div class="collapse navbar-collapse" id="mainNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Feed</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/search">Search</a>
+                        </li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="/post/create">Create Post</a>
+                            </li>
+                        }
+                    </ul>
 
-                    <div id="nav-auth-menu" class="dropdown d-none">
-                        <button class="btn btn-light btn-sm dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img id="nav-profile-avatar" class="rounded-circle" src="" alt="Avatar" width="26" height="26" />
-                            <span id="nav-profile-name" class="fw-semibold">Account</span>
-                        </button>
-
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                            <li><a class="dropdown-item" href="/profile">Profile</a></li>
-                            <li><a class="dropdown-item" href="/settings">Settings</a></li>
-                            <li><hr class="dropdown-divider" /></li>
-                            <li><button id="nav-logout-button" class="dropdown-item text-danger" type="button">Logout</button></li>
-                        </ul>
-                    </div>
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                            <li class="nav-item">
+                                <a class="nav-link" href="/profile/@userId">Profile</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/account/settings">Settings</a>
+                            </li>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Admin</a>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="/admin/dashboard">Dashboard</a></li>
+                                        <li><a class="dropdown-item" href="/admin/users">Users</a></li>
+                                        <li><a class="dropdown-item" href="/admin/posts">Posts</a></li>
+                                    </ul>
+                                </li>
+                            }
+                            <li class="nav-item">
+                                <form method="post" action="/account/logout">
+                                    @Html.AntiForgeryToken()
+                                    <button class="btn btn-link nav-link">Logout</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="/account/login">Login</a>
+                            </li>
+                        }
+                    </ul>
                 </div>
             </div>
         </nav>
     </header>
 
-    <main>
+    <main class="container mb-5">
+        @if (TempData["Error"] is string error && !string.IsNullOrWhiteSpace(error))
+        {
+            <div class="alert alert-danger">@error</div>
+        }
+        @if (TempData["Message"] is string message && !string.IsNullOrWhiteSpace(message))
+        {
+            <div class="alert alert-success">@message</div>
+        }
+
         @RenderBody()
     </main>
 
-    <div id="toast-container" class="toast-container position-fixed top-0 end-0 p-3"></div>
-
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script type="module" src="~/js/auth.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

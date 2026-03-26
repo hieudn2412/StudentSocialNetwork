@@ -21,6 +21,7 @@ public class ExternalAccountRepository : IExternalAccountRepository
 
         return _dbContext.ExternalAccounts
             .Include(x => x.User)
+                .ThenInclude(x => x.Profile)
             .FirstOrDefaultAsync(
                 x => x.Provider.ToLower() == normalizedProvider && x.ProviderUserId.ToLower() == normalizedProviderUserId,
                 cancellationToken);

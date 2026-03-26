@@ -1,0 +1,60 @@
+@model AdminPostsViewModel
+@{
+    ViewData["Title"] = "Manage Posts";
+}
+
+<h1 class="h4 mb-3">Manage Posts</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        @if (Model.Posts.Count == 0)
+        {
+            <div class="text-muted">No posts.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>Author</th>
+                            <th>Content</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var post in Model.Posts)
+                    {
+                        <tr>
+                            <td>@post.AuthorName</td>
+                            <td>@(post.Content.Length <= 100 ? post.Content : $"{post.Content[..100]}...")</td>
+                            <td>@post.Status</td>
+                            <td>@post.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            <td class="text-end">
+                                <div class="d-flex gap-1 justify-content-end">
+                                    <form method="post" action="/admin/posts/@post.Id/status">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="status" value="Approved" />
+                                        <button class="btn btn-sm btn-outline-success" type="submit">Approve</button>
+                                    </form>
+                                    <form method="post" action="/admin/posts/@post.Id/status">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="status" value="Rejected" />
+                                        <button class="btn btn-sm btn-outline-warning" type="submit">Reject</button>
+                                    </form>
+                                    <form method="post" action="/admin/posts/@post.Id/delete">
+                                        @Html.AntiForgeryToken()
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,33 @@
+@model PostCreateViewModel
+@{
+    ViewData["Title"] = "Create Post";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Create Post</h2>
+
+                @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+                {
+                    <div class="alert alert-danger">@Model.ErrorMessage</div>
+                }
+
+                <form method="post" enctype="multipart/form-data" asp-action="Create">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label class="form-label">Content</label>
+                        <textarea class="form-control" asp-for="Content" rows="5" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Image</label>
+                        <input class="form-control" asp-for="Image" type="file" accept="image/*" />
+                    </div>
+                    <button class="btn btn-primary" type="submit">Publish</button>
+                    <a class="btn btn-outline-secondary" href="/">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

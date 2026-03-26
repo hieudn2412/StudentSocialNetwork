@@ -1,0 +1,52 @@
+@model AdminUsersViewModel
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<h1 class="h4 mb-3">Manage Users</h1>
+
+<form method="get" class="mb-3 d-flex gap-2">
+    <select class="form-select w-auto" name="isActive">
+        <option value="" selected="@(Model.IsActiveFilter is null)">All</option>
+        <option value="true" selected="@(Model.IsActiveFilter == true)">Active</option>
+        <option value="false" selected="@(Model.IsActiveFilter == false)">Locked</option>
+    </select>
+    <button class="btn btn-primary" type="submit">Filter</button>
+</form>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var user in Model.Users)
+                {
+                    <tr>
+                        <td>@user.Username</td>
+                        <td>@user.Email</td>
+                        <td>@user.Role</td>
+                        <td>@(user.IsActive ? "Active" : "Locked")</td>
+                        <td class="text-end">
+                            <form method="post" action="/admin/users/@user.Id/toggle-active?isActive=@Model.IsActiveFilter">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-sm @(user.IsActive ? "btn-outline-danger" : "btn-outline-success")" type="submit">
+                                    @(user.IsActive ? "Lock" : "Unlock")
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

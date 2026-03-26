@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using StudentSocialNetwork.Client.Configuration;
 using StudentSocialNetwork.Client.Services;
+using StudentSocialNetwork.Client.Services.Social;
 
 const string externalOAuthScheme = "ExternalOAuth";
 
@@ -34,6 +35,28 @@ builder.Services.AddHttpClient<IBackendApiProxy, BackendApiProxy>((sp, client) =
     AllowAutoRedirect = false
 });
 
+builder.Services.AddHttpClient(nameof(BackendApiOptions), (sp, client) =>
+{
+    var options = sp.GetRequiredService<IConfiguration>()
+        .GetSection(BackendApiOptions.SectionName)
+        .Get<BackendApiOptions>() ?? new BackendApiOptions();
+
+    if (string.IsNullOrWhiteSpace(options.BaseUrl))
+    {
+        throw new InvalidOperationException("BackendApi:BaseUrl is not configured.");
+    }
+
+    client.BaseAddress = new Uri(options.BaseUrl, UriKind.Absolute);
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IFollowService, FollowService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
+
 builder.Services
     .AddAuthentication(options =>
     {
@@ -43,8 +66,8 @@ builder.Services
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
     {
         options.Cookie.Name = "ssn.client.auth";
-        options.LoginPath = "/auth/login";
-        options.AccessDeniedPath = "/auth/login";
+        options.LoginPath = "/account/login";
+        options.AccessDeniedPath = "/account/login";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
     })
@@ -98,6 +121,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Conversations}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

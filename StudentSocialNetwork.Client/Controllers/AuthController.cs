@@ -2,8 +2,10 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using StudentSocialNetwork.Client.Models.Api;
 using StudentSocialNetwork.Client.Services;
 
 namespace StudentSocialNetwork.Client.Controllers;
@@ -13,6 +15,7 @@ public class AuthController : Controller
 {
     private const string ExternalOAuthScheme = "ExternalOAuth";
     private const string OAuthBootstrapCookieName = "ssn.oauth.auth";
+    private const string JwtCookieName = "ssn.jwt";
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -34,49 +37,45 @@ public class AuthController : Controller
     }
 
     [HttpGet("login")]
-    public IActionResult Login([FromQuery] string? error = null)
+    public IActionResult Login([FromQuery] string? error = null, [FromQuery] string? returnUrl = "/conversations")
     {
-        if (!string.IsNullOrWhiteSpace(error))
+        if (User.Identity?.IsAuthenticated == true)
         {
-            ViewData["Error"] = error;
+            return RedirectToAction("Index", "Home");
         }
 
-        return View();
-    }
-
-    [HttpGet("register")]
-    public IActionResult Register()
-    {
-        return View();
+        return RedirectToAction("Login", "Account", new { error, ReturnUrl = returnUrl });
     }
 
     [HttpGet("logout")]
-    public IActionResult Logout()
+    public async Task<IActionResult> Logout()
     {
         Response.Cookies.Delete(OAuthBootstrapCookieName);
-        return RedirectToAction(nameof(Login));
+        Response.Cookies.Delete(JwtCookieName);
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return RedirectToAction("Login", "Account");
     }
 
     [HttpGet("login/google")]
-    public IActionResult LoginGoogle()
+    public IActionResult LoginGoogle([FromQuery] string? returnUrl = null)
     {
-        return ChallengeProvider("Google", nameof(GoogleCallback));
+        return ChallengeProvider("Google", nameof(GoogleCallback), returnUrl);
     }
 
     [HttpGet("callback/google")]
-    public Task<IActionResult> GoogleCallback(CancellationToken cancellationToken)
+    public Task<IActionResult> GoogleCallback([FromQuery] string? returnUrl, CancellationToken cancellationToken)
     {
-        return HandleOAuthCallbackAsync("Google", cancellationToken);
+        return HandleOAuthCallbackAsync("Google", returnUrl, cancellationToken);
     }
 
-    private IActionResult ChallengeProvider(string provider, string callbackActionName)
+    private IActionResult ChallengeProvider(string provider, string callbackActionName, string? returnUrl)
     {
         if (!IsGoogleConfigured())
         {
             return RedirectToAction(nameof(Login), new { error = "Google OAuth is not configured." });
         }
 
-        var redirectUri = Url.Action(callbackActionName, "Auth")
+        var redirectUri = Url.Action(callbackActionName, "Auth", new { returnUrl })
             ?? "/auth/callback/google";
 
         var authProperties = new AuthenticationProperties
@@ -87,7 +86,7 @@ public class AuthController : Controller
         return Challenge(authProperties, provider);
     }
 
-    private async Task<IActionResult> HandleOAuthCallbackAsync(string provider, CancellationToken cancellationToken)
+    private async Task<IActionResult> HandleOAuthCallbackAsync(string provider, string? returnUrl, CancellationToken cancellationToken)
     {
         var authenticationResult = await HttpContext.AuthenticateAsync(ExternalOAuthScheme);
         if (!authenticationResult.Succeeded || authenticationResult.Principal is null)
@@ -97,7 +96,7 @@ public class AuthController : Controller
 
         var principal = authenticationResult.Principal;
 
-        var profile = BuildOAuthProfile(provider, principal, authenticationResult.Properties);
+        var profile = BuildOAuthProfile(provider, principal);
         await HttpContext.SignOutAsync(ExternalOAuthScheme);
 
         if (string.IsNullOrWhiteSpace(profile.ProviderUserId))
@@ -155,12 +154,18 @@ public class AuthController : Controller
             return RedirectToAction(nameof(Login), new { error = message });
         }
 
+        await SignInApplicationSessionAsync(envelope.Data);
         WriteOAuthBootstrapCookie(envelope.Data);
 
-        return Redirect("/home");
+        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            return Redirect(returnUrl);
+        }
+
+        return RedirectToAction("Index", "Home");
     }
 
-    private static OAuthProfile BuildOAuthProfile(string provider, ClaimsPrincipal principal, AuthenticationProperties? properties)
+    private static OAuthProfile BuildOAuthProfile(string provider, ClaimsPrincipal principal)
     {
         var providerUserId = GetFirstClaimValue(principal,
             ClaimTypes.NameIdentifier,
@@ -204,7 +209,7 @@ public class AuthController : Controller
             Email = email ?? string.Empty,
             DisplayName = displayName,
             AvatarUrl = avatarUrl,
-            ProviderAccessToken = properties?.GetTokenValue("access_token")
+            ProviderAccessToken = null
         };
     }
 
@@ -212,6 +217,111 @@ public class AuthController : Controller
     {
         return !string.IsNullOrWhiteSpace(_configuration["Authentication:Google:ClientId"]) &&
                !string.IsNullOrWhiteSpace(_configuration["Authentication:Google:ClientSecret"]);
+    }
+
+    private async Task SignInApplicationSessionAsync(AuthTokenPayload payload)
+    {
+        var role = ResolveUserRole(payload.Token);
+
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, payload.UserId.ToString()),
+            new(ClaimTypes.Name, payload.Username),
+            new(ClaimTypes.Email, payload.Email),
+            new(ClaimTypes.Role, role.ToString())
+        };
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
+
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            principal,
+            new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = payload.ExpiresAt.ToUniversalTime()
+            });
+
+        Response.Cookies.Append(JwtCookieName, payload.Token, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Lax,
+            Expires = payload.ExpiresAt.ToUniversalTime(),
+            Path = "/"
+        });
+    }
+
+    private static UserRole ResolveUserRole(string token)
+    {
+        if (TryReadJwtPayload(token) is not JsonElement payload)
+        {
+            return UserRole.Student;
+        }
+
+        var claimKeys = new[]
+        {
+            "role",
+            ClaimTypes.Role,
+            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        };
+
+        foreach (var claimKey in claimKeys)
+        {
+            if (!payload.TryGetProperty(claimKey, out var claimValue))
+            {
+                continue;
+            }
+
+            if (claimValue.ValueKind is JsonValueKind.String)
+            {
+                var roleText = claimValue.GetString();
+                if (Enum.TryParse<UserRole>(roleText, true, out var roleByName))
+                {
+                    return roleByName;
+                }
+
+                if (int.TryParse(roleText, out var roleNumber) &&
+                    Enum.IsDefined(typeof(UserRole), roleNumber))
+                {
+                    return (UserRole)roleNumber;
+                }
+            }
+            else if (claimValue.ValueKind is JsonValueKind.Number &&
+                     claimValue.TryGetInt32(out var roleNumber) &&
+                     Enum.IsDefined(typeof(UserRole), roleNumber))
+            {
+                return (UserRole)roleNumber;
+            }
+        }
+
+        return UserRole.Student;
+    }
+
+    private static JsonElement? TryReadJwtPayload(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return null;
+        }
+
+        var parts = token.Split('.');
+        if (parts.Length < 2 || string.IsNullOrWhiteSpace(parts[1]))
+        {
+            return null;
+        }
+
+        try
+        {
+            var payloadBytes = WebEncoders.Base64UrlDecode(parts[1]);
+            using var json = JsonDocument.Parse(payloadBytes);
+            return json.RootElement.Clone();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private void WriteOAuthBootstrapCookie(AuthTokenPayload payload)

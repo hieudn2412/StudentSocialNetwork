@@ -1,8 +1,11 @@
+using Microsoft.AspNetCore.Identity;
+using StudentSocialNetwork.Api.Application.Common.Exceptions;
 using StudentSocialNetwork.Api.Application.DTOs.Auth;
 using StudentSocialNetwork.Api.Application.Interfaces.Repositories;
 using StudentSocialNetwork.Api.Application.Interfaces.Security;
 using StudentSocialNetwork.Api.Application.Interfaces.Services;
 using StudentSocialNetwork.Api.Domain.Entities;
+using StudentSocialNetwork.Api.Domain.Entities.Social;
 
 namespace StudentSocialNetwork.Api.Application.Services;
 
@@ -15,6 +18,7 @@ public class AuthService : IAuthService
     private readonly IRefreshTokenHasher _refreshTokenHasher;
     private readonly IRefreshTokenGenerator _refreshTokenGenerator;
     private readonly IRefreshTokenLifetimeProvider _refreshTokenLifetimeProvider;
+    private readonly IPasswordHasher<User> _passwordHasher;
 
     public AuthService(
         IUserRepository userRepository,
@@ -23,7 +27,8 @@ public class AuthService : IAuthService
         IJwtTokenGenerator jwtTokenGenerator,
         IRefreshTokenHasher refreshTokenHasher,
         IRefreshTokenGenerator refreshTokenGenerator,
-        IRefreshTokenLifetimeProvider refreshTokenLifetimeProvider)
+        IRefreshTokenLifetimeProvider refreshTokenLifetimeProvider,
+        IPasswordHasher<User> passwordHasher)
     {
         _userRepository = userRepository;
         _externalAccountRepository = externalAccountRepository;
@@ -32,55 +37,124 @@ public class AuthService : IAuthService
         _refreshTokenHasher = refreshTokenHasher;
         _refreshTokenGenerator = refreshTokenGenerator;
         _refreshTokenLifetimeProvider = refreshTokenLifetimeProvider;
+        _passwordHasher = passwordHasher;
     }
 
-    public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request, string? ipAddress, CancellationToken cancellationToken = default)
+    public async Task<AuthTokenDto> RegisterAsync(RegisterDto request, CancellationToken cancellationToken = default)
     {
-        var email = request.Email.Trim();
-        var user = await _userRepository.GetByEmailAsync(email, cancellationToken);
+        var username = request.Username.Trim();
+        var email = request.Email.Trim().ToLowerInvariant();
 
-        if (user is null)
+        if (await _userRepository.ExistsByEmailAsync(email, cancellationToken: cancellationToken))
         {
-            user = new User
-            {
-                Email = email,
-                Username = string.IsNullOrWhiteSpace(request.Username)
-                    ? BuildUsernameFromEmail(email)
-                    : request.Username.Trim(),
-                CreatedAt = DateTime.UtcNow,
-                LastActiveAt = DateTime.UtcNow,
-                Status = "Online"
-            };
-
-            await _userRepository.AddAsync(user, cancellationToken);
-        }
-        else
-        {
-            user.LastActiveAt = DateTime.UtcNow;
-            user.Status = "Online";
-            _userRepository.Update(user);
+            throw new InvalidOperationException("Email đã được sử dụng.");
         }
 
+        if (await _userRepository.ExistsByUsernameAsync(username, cancellationToken: cancellationToken))
+        {
+            throw new InvalidOperationException("Username đã tồn tại.");
+        }
+
+        var now = DateTime.UtcNow;
+        var user = new User
+        {
+            Username = username,
+            Email = email,
+            Role = UserRole.Student,
+            IsActive = true,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
+        user.Profile = new UserProfile
+        {
+            FullName = NormalizeNullable(request.FullName, 200),
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        await _userRepository.AddAsync(user, cancellationToken);
         await _userRepository.SaveChangesAsync(cancellationToken);
 
-        return await BuildAuthResponseAsync(user, ipAddress, cancellationToken);
+        return BuildAuthToken(user);
     }
 
+    public async Task<AuthTokenDto> LoginAsync(LoginDto request, CancellationToken cancellationToken = default)
+    {
+        var email = request.Email.Trim().ToLowerInvariant();
+        var user = await _userRepository.GetByEmailAsync(email, cancellationToken)
+            ?? throw new UnauthorizedAccessException("Email hoặc mật khẩu không đúng.");
+
+        if (!user.IsActive)
+        {
+            throw new ForbiddenException("Tài khoản đã bị khoá");
+        }
+
+        var verifyResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
+        if (verifyResult is PasswordVerificationResult.Failed)
+        {
+            throw new UnauthorizedAccessException("Email hoặc mật khẩu không đúng.");
+        }
+
+        user.UpdatedAt = DateTime.UtcNow;
+        _userRepository.Update(user);
+        await _userRepository.SaveChangesAsync(cancellationToken);
+
+        return BuildAuthToken(user);
+    }
+
+    public async Task ChangePasswordAsync(int userId, ChangePasswordDto request, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
+            ?? throw new KeyNotFoundException("User not found.");
+
+        if (!user.IsActive)
+        {
+            throw new ForbiddenException("Tài khoản đã bị khoá");
+        }
+
+        var verifyResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.CurrentPassword);
+        if (verifyResult is PasswordVerificationResult.Failed)
+        {
+            throw new UnauthorizedAccessException("Mật khẩu hiện tại không đúng.");
+        }
+
+        user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
+        user.UpdatedAt = DateTime.UtcNow;
+
+        _userRepository.Update(user);
+        await _userRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    // Legacy chat-auth endpoints kept for backward compatibility.
     public async Task<AuthResponseDto> ExternalLoginAsync(ExternalLoginRequestDto request, string? ipAddress, CancellationToken cancellationToken = default)
     {
         var provider = request.Provider.Trim();
         var providerUserId = request.ProviderUserId.Trim();
-        var email = request.Email.Trim();
+        var email = request.Email.Trim().ToLowerInvariant();
 
         var externalAccount = await _externalAccountRepository.GetByProviderAsync(provider, providerUserId, cancellationToken);
+        var now = DateTime.UtcNow;
 
         User user;
         if (externalAccount is not null)
         {
             user = externalAccount.User;
+            if (!user.IsActive)
+            {
+                throw new ForbiddenException("Tài khoản đã bị khoá");
+            }
+
             externalAccount.AccessToken = request.AccessToken;
-            user.LastActiveAt = DateTime.UtcNow;
-            user.Status = "Online";
+            user.UpdatedAt = now;
+
+            if (!string.IsNullOrWhiteSpace(request.AvatarUrl))
+            {
+                var profile = EnsureProfile(user, now);
+                profile.AvatarUrl = request.AvatarUrl.Trim();
+                profile.UpdatedAt = now;
+            }
 
             _userRepository.Update(user);
             await _externalAccountRepository.SaveChangesAsync(cancellationToken);
@@ -94,23 +168,44 @@ public class AuthService : IAuthService
                     Username = string.IsNullOrWhiteSpace(request.Username)
                         ? BuildUsernameFromEmail(email)
                         : request.Username.Trim(),
-                    AvatarUrl = request.AvatarUrl,
-                    CreatedAt = DateTime.UtcNow,
-                    LastActiveAt = DateTime.UtcNow,
-                    Status = "Online"
+                    Role = UserRole.Student,
+                    IsActive = true,
+                    CreatedAt = now,
+                    UpdatedAt = now
                 };
+
+            if (!user.IsActive)
+            {
+                throw new ForbiddenException("Tài khoản đã bị khoá");
+            }
+
+            if (string.IsNullOrWhiteSpace(user.PasswordHash))
+            {
+                user.PasswordHash = _passwordHasher.HashPassword(user, Guid.NewGuid().ToString("N"));
+            }
 
             if (user.Id == 0)
             {
+                if (!string.IsNullOrWhiteSpace(request.AvatarUrl))
+                {
+                    user.Profile = new UserProfile
+                    {
+                        AvatarUrl = request.AvatarUrl.Trim(),
+                        CreatedAt = now,
+                        UpdatedAt = now
+                    };
+                }
+
                 await _userRepository.AddAsync(user, cancellationToken);
             }
             else
             {
-                user.LastActiveAt = DateTime.UtcNow;
-                user.Status = "Online";
+                user.UpdatedAt = now;
                 if (!string.IsNullOrWhiteSpace(request.AvatarUrl))
                 {
-                    user.AvatarUrl = request.AvatarUrl;
+                    var profile = EnsureProfile(user, now);
+                    profile.AvatarUrl = request.AvatarUrl.Trim();
+                    profile.UpdatedAt = now;
                 }
 
                 _userRepository.Update(user);
@@ -121,7 +216,7 @@ public class AuthService : IAuthService
                 Provider = provider,
                 ProviderUserId = providerUserId,
                 AccessToken = request.AccessToken,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = now,
                 User = user
             };
 
@@ -143,6 +238,12 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("Refresh token is expired or revoked.");
         }
 
+        var user = existingRefreshToken.User;
+        if (!user.IsActive)
+        {
+            throw new ForbiddenException("Tài khoản đã bị khoá");
+        }
+
         var nextRefreshTokenPlain = _refreshTokenGenerator.Generate();
         var nextRefreshTokenHash = _refreshTokenHasher.Hash(nextRefreshTokenPlain);
 
@@ -152,7 +253,7 @@ public class AuthService : IAuthService
 
         var newRefreshToken = new RefreshToken
         {
-            UserId = existingRefreshToken.UserId,
+            UserId = user.Id,
             TokenHash = nextRefreshTokenHash,
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenLifetimeProvider.RefreshTokenDays),
@@ -161,9 +262,7 @@ public class AuthService : IAuthService
 
         await _refreshTokenRepository.AddAsync(newRefreshToken, cancellationToken);
 
-        var user = existingRefreshToken.User;
-        user.LastActiveAt = DateTime.UtcNow;
-        user.Status = "Online";
+        user.UpdatedAt = DateTime.UtcNow;
         _userRepository.Update(user);
 
         await _refreshTokenRepository.SaveChangesAsync(cancellationToken);
@@ -236,11 +335,16 @@ public class AuthService : IAuthService
             UserId = user.Id,
             Username = user.Username,
             Email = user.Email,
-            AvatarUrl = user.AvatarUrl,
-            Bio = user.Bio,
-            Status = user.Status,
+            FullName = user.Profile?.FullName,
+            AvatarUrl = user.Profile?.AvatarUrl,
+            Bio = user.Profile?.Bio,
+            ClassName = user.Profile?.ClassName,
+            Major = user.Profile?.Major,
+            Interests = user.Profile?.Interests,
+            Role = user.Role,
+            IsActive = user.IsActive,
             CreatedAt = user.CreatedAt,
-            LastActiveAt = user.LastActiveAt,
+            UpdatedAt = user.UpdatedAt,
             AccountProvider = accountProvider,
             ConnectedProviders = connectedProviders
         };
@@ -256,6 +360,7 @@ public class AuthService : IAuthService
             _ => provider
         };
     }
+
     private async Task<AuthResponseDto> BuildAuthResponseAsync(User user, string? ipAddress, CancellationToken cancellationToken)
     {
         await RevokeActiveRefreshTokensAsync(user.Id, cancellationToken);
@@ -305,6 +410,20 @@ public class AuthService : IAuthService
         }
     }
 
+    private AuthTokenDto BuildAuthToken(User user)
+    {
+        var jwtToken = _jwtTokenGenerator.GenerateToken(user);
+        return new AuthTokenDto
+        {
+            UserId = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            Role = user.Role,
+            Token = jwtToken.AccessToken,
+            ExpiresAt = jwtToken.ExpiresAt
+        };
+    }
+
     private static string BuildUsernameFromEmail(string email)
     {
         var localPart = email.Split('@', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
@@ -315,8 +434,32 @@ public class AuthService : IAuthService
 
         return localPart.Length <= 100 ? localPart : localPart[..100];
     }
+
+    private static UserProfile EnsureProfile(User user, DateTime now)
+    {
+        if (user.Profile is not null)
+        {
+            return user.Profile;
+        }
+
+        user.Profile = new UserProfile
+        {
+            UserId = user.Id,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        return user.Profile;
+    }
+
+    private static string? NormalizeNullable(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
+    }
 }
-
-
-
-

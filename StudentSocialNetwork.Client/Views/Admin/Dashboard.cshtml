@@ -1,0 +1,106 @@
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h1 class="h4 mb-4">Admin Dashboard</h1>
+
+@if (Model.Summary is not null)
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm"><div class="card-body"><div class="text-muted">Total Users</div><div class="h3">@Model.Summary.TotalUsers</div></div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm"><div class="card-body"><div class="text-muted">Total Posts</div><div class="h3">@Model.Summary.TotalPosts</div></div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm"><div class="card-body"><div class="text-muted">Total Comments</div><div class="h3">@Model.Summary.TotalComments</div></div></div>
+        </div>
+    </div>
+}
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h2 class="h6">Top Posts</h2>
+        @if (Model.TopPosts.Count == 0)
+        {
+            <div class="text-muted">No data.</div>
+        }
+        else
+        {
+            <ul class="list-group">
+                @foreach (var post in Model.TopPosts)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fw-semibold">@post.AuthorName</div>
+                            <div class="small text-muted">@post.ContentPreview</div>
+                        </div>
+                        <div class="small text-end">
+                            <div>Likes: @post.LikeCount</div>
+                            <div>Comments: @post.CommentCount</div>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h6">Posts By Date (30d)</h2>
+                @if (Model.PostsByDate.Count == 0)
+                {
+                    <div class="text-muted">No data.</div>
+                }
+                else
+                {
+                    var maxPosts = Math.Max(1, Model.PostsByDate.Max(x => x.Count));
+                    foreach (var item in Model.PostsByDate.TakeLast(10))
+                    {
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small">
+                                <span>@item.Date</span>
+                                <span>@item.Count</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar" style="width: @(item.Count * 100 / maxPosts)%"></div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h6">Users By Date (30d)</h2>
+                @if (Model.UsersByDate.Count == 0)
+                {
+                    <div class="text-muted">No data.</div>
+                }
+                else
+                {
+                    var maxUsers = Math.Max(1, Model.UsersByDate.Max(x => x.Count));
+                    foreach (var item in Model.UsersByDate.TakeLast(10))
+                    {
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small">
+                                <span>@item.Date</span>
+                                <span>@item.Count</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success" style="width: @(item.Count * 100 / maxUsers)%"></div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

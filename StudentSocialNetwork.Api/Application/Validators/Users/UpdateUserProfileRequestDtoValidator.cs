@@ -11,11 +11,23 @@ public class UpdateUserProfileRequestDtoValidator : AbstractValidator<UpdateUser
             .NotEmpty()
             .MaximumLength(100);
 
+        RuleFor(x => x.FullName)
+            .MaximumLength(200);
+
         RuleFor(x => x.Bio)
-            .MaximumLength(500);
+            .MaximumLength(1000);
 
         RuleFor(x => x.AvatarUrl)
-            .MaximumLength(500)
+            .MaximumLength(1000)
             .When(x => !string.IsNullOrWhiteSpace(x.AvatarUrl));
+
+        RuleFor(x => x.ClassName)
+            .MaximumLength(100);
+
+        RuleFor(x => x.Major)
+            .MaximumLength(150);
+
+        RuleFor(x => x.Interests)
+            .MaximumLength(2000);
     }
 }

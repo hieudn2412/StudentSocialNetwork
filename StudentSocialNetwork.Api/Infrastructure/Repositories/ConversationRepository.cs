@@ -27,6 +27,7 @@ public class ConversationRepository : IConversationRepository
             .Include(x => x.LastMessage)
             .Include(x => x.Members)
                 .ThenInclude(x => x.User)
+                    .ThenInclude(x => x.Profile)
             .FirstOrDefaultAsync(x => x.Id == conversationId, cancellationToken);
     }
 
@@ -38,6 +39,7 @@ public class ConversationRepository : IConversationRepository
             .Include(x => x.LastMessage)
             .Include(x => x.Members.Where(m => m.LeftAt == null))
                 .ThenInclude(x => x.User)
+                    .ThenInclude(x => x.Profile)
             .OrderByDescending(x => x.LastMessageAt ?? x.CreatedAt)
             .ToListAsync(cancellationToken);
     }
@@ -66,6 +68,7 @@ public class ConversationRepository : IConversationRepository
             .Include(x => x.LastMessage)
             .Include(x => x.Members.Where(m => m.LeftAt == null))
                 .ThenInclude(x => x.User)
+                    .ThenInclude(x => x.Profile)
             .FirstOrDefaultAsync(cancellationToken);
     }
 

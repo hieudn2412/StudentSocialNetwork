@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using StudentSocialNetwork.Api.Domain.Entities;
+using StudentSocialNetwork.Api.Domain.Entities.Social;
 
 namespace StudentSocialNetwork.Api.Infrastructure.Persistence.Configurations;
 
@@ -28,13 +29,19 @@ public static class ChatModelConfigurations
 
         builder.Property(x => x.Username).HasMaxLength(100).IsRequired();
         builder.Property(x => x.Email).HasMaxLength(255).IsRequired();
-        builder.Property(x => x.AvatarUrl).HasMaxLength(500);
-        builder.Property(x => x.Bio).HasMaxLength(500);
-        builder.Property(x => x.Status).HasMaxLength(20).IsRequired();
-        builder.Property(x => x.CreatedAt).HasColumnType("datetime");
-        builder.Property(x => x.LastActiveAt).HasColumnType("datetime");
+        builder.Property(x => x.PasswordHash).HasMaxLength(500).IsRequired();
+        builder.Property(x => x.Role).HasConversion<int>().IsRequired();
+        builder.Property(x => x.IsActive).HasDefaultValue(true).IsRequired();
+        builder.Property(x => x.CreatedAt).HasColumnType("datetime2");
+        builder.Property(x => x.UpdatedAt).HasColumnType("datetime2");
 
+        builder.HasIndex(x => x.Username).IsUnique();
         builder.HasIndex(x => x.Email).IsUnique();
+
+        builder.HasOne(x => x.Profile)
+            .WithOne(x => x.User)
+            .HasForeignKey<UserProfile>(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 
     private static void ConfigureExternalAccounts(EntityTypeBuilder<ExternalAccount> builder)

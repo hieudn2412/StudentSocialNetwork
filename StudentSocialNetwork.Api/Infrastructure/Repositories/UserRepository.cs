@@ -16,19 +16,48 @@ public class UserRepository : IUserRepository
 
     public Task<User?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        return _dbContext.Users.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        return _dbContext.Users
+            .Include(x => x.Profile)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
     public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         var normalizedEmail = email.Trim().ToLowerInvariant();
-        return _dbContext.Users.FirstOrDefaultAsync(x => x.Email.ToLower() == normalizedEmail, cancellationToken);
+        return _dbContext.Users
+            .Include(x => x.Profile)
+            .FirstOrDefaultAsync(x => x.Email.ToLower() == normalizedEmail, cancellationToken);
+    }
+
+    public Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
+    {
+        var normalizedUsername = username.Trim().ToLowerInvariant();
+        return _dbContext.Users
+            .Include(x => x.Profile)
+            .FirstOrDefaultAsync(x => x.Username.ToLower() == normalizedUsername, cancellationToken);
+    }
+
+    public Task<bool> ExistsByEmailAsync(string email, int? excludeUserId = null, CancellationToken cancellationToken = default)
+    {
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        return _dbContext.Users.AnyAsync(
+            x => x.Email.ToLower() == normalizedEmail && (!excludeUserId.HasValue || x.Id != excludeUserId.Value),
+            cancellationToken);
+    }
+
+    public Task<bool> ExistsByUsernameAsync(string username, int? excludeUserId = null, CancellationToken cancellationToken = default)
+    {
+        var normalizedUsername = username.Trim().ToLowerInvariant();
+        return _dbContext.Users.AnyAsync(
+            x => x.Username.ToLower() == normalizedUsername && (!excludeUserId.HasValue || x.Id != excludeUserId.Value),
+            cancellationToken);
     }
 
     public async Task<IReadOnlyList<User>> GetByIdsAsync(IEnumerable<int> ids, CancellationToken cancellationToken = default)
     {
         var distinctIds = ids.Distinct().ToList();
         return await _dbContext.Users
+            .Include(x => x.Profile)
             .Where(x => distinctIds.Contains(x.Id))
             .ToListAsync(cancellationToken);
     }
@@ -46,6 +75,7 @@ public class UserRepository : IUserRepository
 
         return await _dbContext.Users
             .AsNoTracking()
+            .Include(x => x.Profile)
             .Where(x => x.Id != currentUserId
                 && (x.Username.ToLower().Contains(lowered) || x.Email.ToLower().Contains(lowered)))
             .OrderBy(x => x.Username)

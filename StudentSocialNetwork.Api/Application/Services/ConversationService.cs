@@ -255,7 +255,7 @@ public class ConversationService : IConversationService
                 {
                     UserId = x.UserId,
                     Username = x.User.Username,
-                    AvatarUrl = x.User.AvatarUrl,
+                    AvatarUrl = x.User.Profile?.AvatarUrl,
                     Role = x.Role,
                     JoinedAt = x.JoinedAt
                 })

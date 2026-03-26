@@ -34,6 +34,7 @@ public class GlobalExceptionMiddleware
         var (statusCode, message) = exception switch
         {
             ValidationException validationException => (StatusCodes.Status400BadRequest, string.Join("; ", validationException.Errors.Select(x => x.ErrorMessage).Distinct())),
+            ForbiddenException => (StatusCodes.Status403Forbidden, exception.Message),
             UnauthorizedException => (StatusCodes.Status401Unauthorized, exception.Message),
             NotFoundException => (StatusCodes.Status404NotFound, exception.Message),
             UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, exception.Message),

@@ -1,52 +1,101 @@
-using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using StudentSocialNetwork.Client.Models;
+using StudentSocialNetwork.Client.Models.ViewModels.Social;
+using StudentSocialNetwork.Client.Services.Social;
 
-namespace StudentSocialNetwork.Client.Controllers
+namespace StudentSocialNetwork.Client.Controllers;
+
+public class HomeController : Controller
 {
-    public class HomeController : Controller
+    private readonly IPostService _postService;
+    private readonly IUserService _userService;
+
+    public HomeController(IPostService postService, IUserService userService)
     {
-        private readonly ILogger<HomeController> _logger;
+        _postService = postService;
+        _userService = userService;
+    }
 
-        public HomeController(ILogger<HomeController> logger)
+    [HttpGet("/")]
+    [HttpGet("/home")]
+    [HttpGet("/home/index")]
+    public async Task<IActionResult> Index(
+        [FromQuery] string tab = "all",
+        [FromQuery] string? search = null,
+        [FromQuery] string? hashtag = null,
+        [FromQuery] int? author = null,
+        CancellationToken cancellationToken = default)
+    {
+        var vm = new FeedViewModel
         {
-            _logger = logger;
+            Tab = tab,
+            Search = search,
+            Hashtag = hashtag,
+            AuthorId = author
+        };
+
+        try
+        {
+            vm.Posts = await _postService.GetFeedAsync(tab, search, hashtag, author, cancellationToken);
+
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                vm.Suggestions = await _userService.GetSuggestionsAsync(cancellationToken);
+            }
+        }
+        catch (ApiClientException ex)
+        {
+            TempData["Error"] = ex.Message;
         }
 
-        public IActionResult Index()
+        return View(vm);
+    }
+
+    [HttpGet("/search")]
+    public async Task<IActionResult> Search([FromQuery(Name = "q")] string query, CancellationToken cancellationToken = default)
+    {
+        var vm = new SearchViewModel
         {
-            return View();
+            Query = query ?? string.Empty
+        };
+
+        if (string.IsNullOrWhiteSpace(vm.Query))
+        {
+            return View(vm);
         }
 
-        public IActionResult Privacy()
+        try
         {
-            return View();
+            vm.Users = await _userService.SearchUsersAsync(vm.Query, 30, cancellationToken);
+            vm.Posts = await _postService.GetFeedAsync("all", vm.Query, null, null, cancellationToken);
+        }
+        catch (ApiClientException ex)
+        {
+            TempData["Error"] = ex.Message;
         }
 
-        public IActionResult Search()
+        return View(vm);
+    }
+
+    [Authorize]
+    [HttpPost("/posts/{id:guid}/like")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Like(Guid id, string? returnUrl = null, CancellationToken cancellationToken = default)
+    {
+        try
         {
-            return View();
+            await _postService.ToggleLikeAsync(id, cancellationToken);
+        }
+        catch (ApiClientException ex)
+        {
+            TempData["Error"] = ex.Message;
         }
 
-        public IActionResult Trending()
+        if (!string.IsNullOrWhiteSpace(returnUrl))
         {
-            return View();
+            return Redirect(returnUrl);
         }
 
-        public IActionResult Admin()
-        {
-            return View();
-        }
-
-        public IActionResult Reports()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
+        return RedirectToAction(nameof(Index));
     }
 }
