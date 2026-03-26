@@ -1,37 +1,43 @@
 @model StudentSocialNetwork.Client.Models.ViewModels.ChatPageViewModel
 
 <div id="chat-app"
-     class="messenger-app container-fluid py-3"
+     class="messenger-app page-wide"
      data-backend-base-url="@Model.BackendBaseUrl"
      data-hub-endpoint="@Model.HubEndpoint"
      data-initial-conversation-id="@(Model.ConversationId?.ToString() ?? string.Empty)">
     <div class="row g-3 messenger-shell">
         <aside class="col-12 col-lg-3">
             <section class="messenger-panel messenger-left-panel h-100">
-                <header class="messenger-panel-header px-3 pt-3 pb-2">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <h1 class="h5 mb-0">Chats</h1>
-                        <span class="text-muted small">Messenger UI</span>
+                <header class="messenger-panel-header px-3 pt-3 pb-3">
+                    <div class="chat-panel-kicker">Social inbox</div>
+                    <div class="d-flex align-items-end justify-content-between gap-2">
+                        <div>
+                            <h1 class="h5 mb-1">Conversations</h1>
+                            <p class="chat-panel-subtitle mb-0">Keep your messages, groups, and course discussions in one place.</p>
+                        </div>
+                        <span class="chat-status-pill">Live</span>
                     </div>
                 </header>
 
-                <div class="px-3 pb-2">
+                <div class="px-3 pt-3 pb-2">
                     <div class="user-search-box position-relative">
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white">New chat</span>
+                        <label class="chat-field-label" for="user-search-input">Start a new chat</label>
+                        <div class="input-group chat-input-group">
+                            <span class="input-group-text bg-white">New</span>
                             <input id="user-search-input" class="form-control" type="search" placeholder="Search users by name or email" autocomplete="off" />
                         </div>
                         <div id="user-search-results" class="user-search-results d-none"></div>
                     </div>
                 </div>
 
-                <div class="px-3 pb-2 border-bottom">
-                    <div class="input-group input-group-sm mb-2">
+                <div class="px-3 pb-3 border-bottom">
+                    <label class="chat-field-label" for="conversation-search-input">Filter conversations</label>
+                    <div class="input-group chat-input-group mb-3">
                         <span class="input-group-text bg-white">Filter</span>
                         <input id="conversation-search-input" class="form-control" type="search" placeholder="Filter conversations" />
                     </div>
 
-                    <div class="accordion accordion-flush" id="conversation-create-accordion">
+                    <div class="accordion accordion-flush chat-create-accordion" id="conversation-create-accordion">
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="group-create-heading">
                                 <button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#group-create-panel" aria-expanded="false" aria-controls="group-create-panel">
@@ -70,10 +76,11 @@
 
         <section class="col-12 col-lg-6">
             <section class="messenger-panel messenger-center-panel h-100">
-                <header class="messenger-panel-header px-3 py-2 d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center gap-2 min-w-0">
+                <header class="messenger-panel-header px-3 py-3 d-flex align-items-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-2 min-w-0 conversation-hero">
                         <div id="active-conversation-avatar" class="avatar avatar-lg">C</div>
                         <div class="min-w-0">
+                            <div class="chat-panel-kicker mb-1">Active conversation</div>
                             <h2 id="active-conversation-name" class="h6 mb-0 text-truncate">Select a conversation</h2>
                             <p id="active-conversation-meta" class="text-muted small mb-0 text-truncate"></p>
                         </div>
@@ -90,7 +97,7 @@
                     <div id="message-list" class="message-list"></div>
                 </div>
 
-                <div class="px-3 pt-1 pb-2">
+                <div class="px-3 pt-2 pb-2">
                     @await Html.PartialAsync("_TypingIndicator")
                 </div>
 
@@ -105,11 +112,12 @@
                     <div id="pending-attachments" class="pending-attachments d-flex flex-wrap gap-2 mb-2"></div>
 
                     <div class="d-flex align-items-end gap-2">
-                        <button id="composer-emoji-button" class="btn btn-light composer-icon-btn" type="button" aria-label="Insert emoji">🙂</button>
-                        <button id="composer-attach-button" class="btn btn-light composer-icon-btn" type="button" aria-label="Attach files">📎</button>
+                        <button id="composer-emoji-button" class="btn btn-light composer-icon-btn" type="button" aria-label="Insert emoji">:)</button>
+                        <button id="composer-attach-button" class="btn btn-light composer-icon-btn" type="button" aria-label="Attach files">+</button>
                         <textarea id="message-input" class="form-control composer-input" rows="1" placeholder="Type a message"></textarea>
                         <button type="submit" class="btn btn-primary">Send</button>
                     </div>
+                    <div class="chat-composer-hint">Press Enter to send, Shift+Enter for a new line.</div>
 
                     <input id="message-files" type="file" multiple class="d-none" />
 
@@ -132,6 +140,7 @@
         <aside class="col-12 col-lg-3">
             <section class="messenger-panel messenger-right-panel h-100">
                 <header class="messenger-panel-header px-3 py-3">
+                    <div class="chat-panel-kicker">Workspace</div>
                     <h2 class="h6 mb-0">Conversation Info</h2>
                 </header>
 
@@ -200,4 +209,3 @@
         @await Html.PartialAsync("_ReactionBar")
     </template>
 </div>
-

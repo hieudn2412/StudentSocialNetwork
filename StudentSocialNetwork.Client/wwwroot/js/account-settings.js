@@ -92,6 +92,7 @@ async function refreshProfile() {
 function renderProfile(profile) {
     setText('profile-display-name', profile.username || 'My profile');
     setText('profile-display-email', profile.email || '-');
+    setText('profile-bio-summary', profile.bio || 'Chua cap nhat tieu su.');
     setText('profile-provider', profile.accountProvider || 'Google');
     setText('profile-created-at', formatDate(profile.createdAt));
     setText('profile-status', profile.status || '-');
@@ -136,6 +137,7 @@ async function saveProfileFromForm(section) {
 
     currentProfile = updated;
     renderProfile(updated);
+    document.getElementById('edit-profile')?.classList.remove('open');
     window.appToast('Profile updated successfully.', 'success');
 }
 

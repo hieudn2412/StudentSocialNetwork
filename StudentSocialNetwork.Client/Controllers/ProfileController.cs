@@ -10,4 +10,9 @@ public class ProfileController : Controller
     {
         return View();
     }
+
+    public IActionResult Connections()
+    {
+        return View();
+    }
 }

@@ -23,6 +23,26 @@ namespace StudentSocialNetwork.Client.Controllers
             return View();
         }
 
+        public IActionResult Search()
+        {
+            return View();
+        }
+
+        public IActionResult Trending()
+        {
+            return View();
+        }
+
+        public IActionResult Admin()
+        {
+            return View();
+        }
+
+        public IActionResult Reports()
+        {
+            return View();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
