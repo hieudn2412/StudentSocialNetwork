@@ -1,27 +1,30 @@
 @model SearchViewModel
 @{
-    ViewData["Title"] = "Search";
+    ViewData["Title"] = "Tìm kiếm";
 }
 
-<div class="row">
-    <div class="col-12">
-        <form method="get" action="/search" class="mb-4">
-            <div class="input-group">
-                <input class="form-control" type="text" name="q" placeholder="Search users and posts..." value="@Model.Query" />
-                <button class="btn btn-primary" type="submit">Search</button>
-            </div>
-        </form>
-    </div>
+<div class="ssn-page-header">
+    <h1>Tìm kiếm</h1>
+    <p>Tìm người dùng và bài viết trong hệ thống</p>
 </div>
+
+<section class="ssn-surface ssn-card-body mb-3">
+    <form method="get" action="/search" class="d-flex gap-2">
+        <input class="form-control" type="text" name="q" placeholder="Tìm kiếm bài viết, người dùng..." value="@Model.Query" />
+        <button class="btn btn-primary" type="submit">Tìm</button>
+    </form>
+</section>
 
 @if (!string.IsNullOrWhiteSpace(Model.Query))
 {
-    <div class="row g-4">
-        <div class="col-12 col-lg-5">
-            <h2 class="h5">Users</h2>
+    <div class="ssn-search-grid">
+        <section class="ssn-surface ssn-card-body">
+            <h2 class="ssn-section-title">Người dùng</h2>
+            <p class="ssn-subtitle">Kết quả phù hợp theo tên và username</p>
+
             @if (Model.Users.Count == 0)
             {
-                <div class="text-muted">No users found.</div>
+                <div class="ssn-empty">Không tìm thấy người dùng nào.</div>
             }
             else
             {
@@ -35,27 +38,31 @@
                     }
                 </div>
             }
-        </div>
+        </section>
 
-        <div class="col-12 col-lg-7">
-            <h2 class="h5">Posts</h2>
+        <section class="ssn-surface ssn-card-body">
+            <h2 class="ssn-section-title">Bài viết</h2>
+            <p class="ssn-subtitle">Nội dung liên quan đến từ khóa</p>
+
             @if (Model.Posts.Count == 0)
             {
-                <div class="text-muted">No posts found.</div>
+                <div class="ssn-empty">Không tìm thấy bài viết nào.</div>
             }
             else
             {
-                @foreach (var post in Model.Posts)
+                foreach (var post in Model.Posts)
                 {
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <a class="fw-semibold text-decoration-none" href="/profile/@post.AuthorId">@post.AuthorName</a>
-                            <p class="mb-2 mt-2">@post.Content</p>
-                            <a class="btn btn-sm btn-outline-primary" href="/post/@post.Id">Open</a>
-                        </div>
-                    </div>
+                    <article class="ssn-surface ssn-card-body mb-2">
+                        <a class="ssn-author-name" href="/profile/@post.AuthorId">@post.AuthorName</a>
+                        <div class="ssn-post-content">@post.Content</div>
+                        <a class="btn btn-sm btn-outline-primary" href="/post/@post.Id">Mở chi tiết</a>
+                    </article>
                 }
             }
-        </div>
+        </section>
     </div>
+}
+else
+{
+    <div class="ssn-surface ssn-empty">Nhập từ khóa để bắt đầu tìm kiếm.</div>
 }

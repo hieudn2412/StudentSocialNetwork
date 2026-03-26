@@ -92,7 +92,7 @@ public class PostService : IPostService
             Content = request.Content.Trim(),
             ImageUrl = NormalizeNullable(request.ImageUrl, 1000),
             Hashtags = SocialMapping.ExtractHashtags(request.Content),
-            Status = PostStatus.Pending,
+            Status = PostStatus.Approved,
             AuthorId = authorId,
             CreatedAt = now,
             UpdatedAt = now
@@ -124,7 +124,7 @@ public class PostService : IPostService
             ?? throw new KeyNotFoundException("Không tìm thấy bài viết.");
 
         var canView = isAdmin
-                      || post.Status == PostStatus.Approved
+                      || post.Status != PostStatus.Rejected
                       || (currentUserId.HasValue && post.AuthorId == currentUserId.Value);
 
         if (!canView)
@@ -154,12 +154,7 @@ public class PostService : IPostService
         post.ImageUrl = NormalizeNullable(request.ImageUrl, 1000);
         post.Hashtags = SocialMapping.ExtractHashtags(request.Content);
         post.UpdatedAt = DateTime.UtcNow;
-
-        if (!isAdmin)
-        {
-            // Re-approval flow: user edits will return to moderation queue.
-            post.Status = PostStatus.Pending;
-        }
+        post.Status = PostStatus.Approved;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return post.ToPostDto(actorUserId);
@@ -184,7 +179,7 @@ public class PostService : IPostService
         var post = await _dbContext.Posts.FirstOrDefaultAsync(x => x.Id == postId, cancellationToken)
             ?? throw new KeyNotFoundException("Không tìm thấy bài viết.");
 
-        if (post.Status != PostStatus.Approved && post.AuthorId != userId)
+        if (post.Status == PostStatus.Rejected && post.AuthorId != userId)
         {
             throw new ForbiddenException("Bạn không thể thích bài viết này.");
         }

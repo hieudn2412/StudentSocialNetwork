@@ -31,6 +31,20 @@ public class AdminController : Controller
         return View(vm);
     }
 
+    [HttpGet("reports")]
+    public async Task<IActionResult> Reports(CancellationToken cancellationToken)
+    {
+        var vm = new AdminDashboardViewModel
+        {
+            Summary = await _adminService.GetSummaryAsync(cancellationToken),
+            TopPosts = await _adminService.GetTopPostsAsync(cancellationToken),
+            PostsByDate = await _adminService.GetPostsByDateAsync(cancellationToken),
+            UsersByDate = await _adminService.GetUsersByDateAsync(cancellationToken)
+        };
+
+        return View(vm);
+    }
+
     [HttpGet("users")]
     public async Task<IActionResult> Users([FromQuery] bool? isActive, CancellationToken cancellationToken)
     {

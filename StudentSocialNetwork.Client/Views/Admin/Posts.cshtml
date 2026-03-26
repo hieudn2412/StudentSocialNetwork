@@ -1,60 +1,71 @@
-@model AdminPostsViewModel
+﻿@model AdminPostsViewModel
 @{
-    ViewData["Title"] = "Manage Posts";
+    ViewData["Title"] = "Quản lý bài viết";
 }
 
-<h1 class="h4 mb-3">Manage Posts</h1>
+<div class="ssn-page-header">
+    <h1>Quản trị hệ thống</h1>
+    <p>Quản lý và xoá bài viết trong hệ thống</p>
+</div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        @if (Model.Posts.Count == 0)
-        {
-            <div class="text-muted">No posts.</div>
-        }
-        else
-        {
-            <div class="table-responsive">
-                <table class="table table-striped align-middle">
-                    <thead>
-                        <tr>
-                            <th>Author</th>
-                            <th>Content</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
+<div class="ssn-admin-tabs">
+    <a class="ssn-admin-tab" href="/admin/dashboard">Tổng quan</a>
+    <a class="ssn-admin-tab" href="/admin/users">Quản lý người dùng</a>
+    <a class="ssn-admin-tab active" href="/admin/posts">Quản lý bài viết</a>
+    <a class="ssn-admin-tab" href="/admin/reports">Báo cáo</a>
+</div>
+
+<section class="ssn-surface ssn-card-body">
+    <h2 class="ssn-section-title mb-3">Danh sách bài viết</h2>
+
+    @if (Model.Posts.Count == 0)
+    {
+        <div class="ssn-empty">Chưa có bài viết nào.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="ssn-table">
+                <thead>
+                    <tr>
+                        <th>Tác giả</th>
+                        <th>Nội dung</th>
+                        <th>Ngày tạo</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
                     @foreach (var post in Model.Posts)
                     {
+                        var author = string.IsNullOrWhiteSpace(post.AuthorName) ? "Người dùng" : post.AuthorName;
+                        var avatar = author.Trim()[0].ToString().ToUpperInvariant();
+
                         <tr>
-                            <td>@post.AuthorName</td>
-                            <td>@(post.Content.Length <= 100 ? post.Content : $"{post.Content[..100]}...")</td>
-                            <td>@post.Status</td>
-                            <td>@post.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <div class="ssn-table-user">
+                                    <span class="ssn-table-avatar">@avatar</span>
+                                    <div>
+                                        <div class="fw-semibold">@author</div>
+                                        <div class="ssn-muted">♥ @post.LikeCount • 💬 @post.CommentCount</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                @(post.Content.Length <= 120 ? post.Content : $"{post.Content[..120]}...")
+                            </td>
+                            <td>@post.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                             <td class="text-end">
                                 <div class="d-flex gap-1 justify-content-end">
-                                    <form method="post" action="/admin/posts/@post.Id/status">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="status" value="Approved" />
-                                        <button class="btn btn-sm btn-outline-success" type="submit">Approve</button>
-                                    </form>
-                                    <form method="post" action="/admin/posts/@post.Id/status">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="status" value="Rejected" />
-                                        <button class="btn btn-sm btn-outline-warning" type="submit">Reject</button>
-                                    </form>
                                     <form method="post" action="/admin/posts/@post.Id/delete">
                                         @Html.AntiForgeryToken()
-                                        <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Xoá</button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
                     }
-                    </tbody>
-                </table>
-            </div>
-        }
-    </div>
-</div>
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

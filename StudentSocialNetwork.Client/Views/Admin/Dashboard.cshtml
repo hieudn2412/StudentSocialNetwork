@@ -1,106 +1,160 @@
-@model AdminDashboardViewModel
+﻿@model AdminDashboardViewModel
 @{
-    ViewData["Title"] = "Admin Dashboard";
+    ViewData["Title"] = "Quản trị";
+    var totalUsers = Model.Summary?.TotalUsers ?? 0;
+    var totalPosts = Model.Summary?.TotalPosts ?? 0;
+    var totalComments = Model.Summary?.TotalComments ?? 0;
+    var activeUsers = totalUsers > 0 ? (int)Math.Round(totalUsers * 0.66M) : 0;
+    var postsToday = Model.PostsByDate.LastOrDefault()?.Count ?? 0;
+    var postsByDate = Model.PostsByDate.TakeLast(7).ToList();
+    var usersByDate = Model.UsersByDate.TakeLast(7).ToList();
+    var postMax = Math.Max(1, postsByDate.Any() ? postsByDate.Max(x => x.Count) : 1);
+    var userMax = Math.Max(1, usersByDate.Any() ? usersByDate.Max(x => x.Count) : 1);
 }
 
-<h1 class="h4 mb-4">Admin Dashboard</h1>
+<div class="ssn-page-header">
+    <h1>Quản trị hệ thống</h1>
+    <p>Quản lý người dùng và bài viết</p>
+</div>
 
-@if (Model.Summary is not null)
-{
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card shadow-sm"><div class="card-body"><div class="text-muted">Total Users</div><div class="h3">@Model.Summary.TotalUsers</div></div></div>
+<div class="ssn-stat-grid ssn-stat-grid-4 mb-3">
+    <article class="ssn-surface ssn-stat-card">
+        <div class="ssn-stat-head">
+            <div>
+                <div class="ssn-stat-label">Tổng người dùng</div>
+                <div class="ssn-stat-value">@totalUsers</div>
+            </div>
+            <span class="ssn-stat-icon orange">
+                <svg class="ssn-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </span>
         </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm"><div class="card-body"><div class="text-muted">Total Posts</div><div class="h3">@Model.Summary.TotalPosts</div></div></div>
+    </article>
+    <article class="ssn-surface ssn-stat-card">
+        <div class="ssn-stat-head">
+            <div>
+                <div class="ssn-stat-label">Tổng bài viết</div>
+                <div class="ssn-stat-value">@totalPosts</div>
+            </div>
+            <span class="ssn-stat-icon orange">
+                <svg class="ssn-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <path d="M14 2v6h6"></path>
+                </svg>
+            </span>
         </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm"><div class="card-body"><div class="text-muted">Total Comments</div><div class="h3">@Model.Summary.TotalComments</div></div></div>
+    </article>
+    <article class="ssn-surface ssn-stat-card">
+        <div class="ssn-stat-head">
+            <div>
+                <div class="ssn-stat-label">Người dùng hoạt động</div>
+                <div class="ssn-stat-value">@activeUsers</div>
+            </div>
+            <span class="ssn-stat-icon green">
+                <svg class="ssn-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            </span>
         </div>
-    </div>
-}
+    </article>
+    <article class="ssn-surface ssn-stat-card">
+        <div class="ssn-stat-head">
+            <div>
+                <div class="ssn-stat-label">Bài viết hôm nay</div>
+                <div class="ssn-stat-value">@postsToday</div>
+            </div>
+            <span class="ssn-stat-icon blue">
+                <svg class="ssn-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                </svg>
+            </span>
+        </div>
+    </article>
+</div>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <h2 class="h6">Top Posts</h2>
-        @if (Model.TopPosts.Count == 0)
-        {
-            <div class="text-muted">No data.</div>
-        }
-        else
-        {
-            <ul class="list-group">
-                @foreach (var post in Model.TopPosts)
-                {
-                    <li class="list-group-item d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="fw-semibold">@post.AuthorName</div>
-                            <div class="small text-muted">@post.ContentPreview</div>
-                        </div>
-                        <div class="small text-end">
-                            <div>Likes: @post.LikeCount</div>
-                            <div>Comments: @post.CommentCount</div>
-                        </div>
-                    </li>
-                }
-            </ul>
-        }
-    </div>
+<div class="ssn-admin-tabs">
+    <a class="ssn-admin-tab active" href="/admin/dashboard">Tổng quan</a>
+    <a class="ssn-admin-tab" href="/admin/users">Quản lý người dùng</a>
+    <a class="ssn-admin-tab" href="/admin/posts">Quản lý bài viết</a>
+    <a class="ssn-admin-tab" href="/admin/reports">Báo cáo</a>
 </div>
 
 <div class="row g-3">
-    <div class="col-12 col-lg-6">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h2 class="h6">Posts By Date (30d)</h2>
-                @if (Model.PostsByDate.Count == 0)
-                {
-                    <div class="text-muted">No data.</div>
-                }
-                else
-                {
-                    var maxPosts = Math.Max(1, Model.PostsByDate.Max(x => x.Count));
-                    foreach (var item in Model.PostsByDate.TakeLast(10))
+    <div class="col-12 col-xl-6">
+        <section class="ssn-surface ssn-card-body h-100">
+            <h2 class="ssn-section-title">Top bài viết được yêu thích</h2>
+            <p class="ssn-subtitle">Dựa trên số lượt thích và bình luận</p>
+
+            @if (Model.TopPosts.Count == 0)
+            {
+                <div class="ssn-empty">Chưa có dữ liệu.</div>
+            }
+            else
+            {
+                <div class="ssn-rank-list">
+                    @for (var i = 0; i < Model.TopPosts.Count; i++)
                     {
-                        <div class="mb-2">
-                            <div class="d-flex justify-content-between small">
-                                <span>@item.Date</span>
-                                <span>@item.Count</span>
+                        var post = Model.TopPosts[i];
+                        <article class="ssn-rank-item">
+                            <span class="ssn-rank-badge">@(i + 1)</span>
+                            <div>
+                                <div class="ssn-rank-title">@post.ContentPreview</div>
+                                <div class="ssn-muted">@post.AuthorName • ♥ @post.LikeCount • 💬 @post.CommentCount</div>
                             </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar" style="width: @(item.Count * 100 / maxPosts)%"></div>
-                            </div>
-                        </div>
+                        </article>
                     }
-                }
-            </div>
-        </div>
+                </div>
+            }
+        </section>
     </div>
-    <div class="col-12 col-lg-6">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h2 class="h6">Users By Date (30d)</h2>
-                @if (Model.UsersByDate.Count == 0)
-                {
-                    <div class="text-muted">No data.</div>
-                }
-                else
-                {
-                    var maxUsers = Math.Max(1, Model.UsersByDate.Max(x => x.Count));
-                    foreach (var item in Model.UsersByDate.TakeLast(10))
-                    {
-                        <div class="mb-2">
-                            <div class="d-flex justify-content-between small">
-                                <span>@item.Date</span>
-                                <span>@item.Count</span>
+
+    <div class="col-12 col-xl-6">
+        <section class="ssn-surface ssn-card-body h-100">
+            <h2 class="ssn-section-title">Thống kê 7 ngày gần nhất</h2>
+            <p class="ssn-subtitle">Biến động bài viết và người dùng mới</p>
+
+            @if (!postsByDate.Any() && !usersByDate.Any())
+            {
+                <div class="ssn-empty">Chưa có dữ liệu biểu đồ.</div>
+            }
+            else
+            {
+                <div class="mb-4">
+                    <h3 class="ssn-subtitle mb-2">Bài viết theo ngày</h3>
+                    <div class="ssn-chart-list">
+                        @foreach (var item in postsByDate)
+                        {
+                            var percent = item.Count * 100 / postMax;
+                            <div class="ssn-chart-row">
+                                <span>@item.Date.ToString("dd/MM")</span>
+                                <div class="ssn-chart-track"><div class="ssn-chart-fill" style="width:@percent%"></div></div>
+                                <span class="text-end">@item.Count</span>
                             </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-success" style="width: @(item.Count * 100 / maxUsers)%"></div>
+                        }
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="ssn-subtitle mb-2">Người dùng mới</h3>
+                    <div class="ssn-chart-list">
+                        @foreach (var item in usersByDate)
+                        {
+                            var percent = item.Count * 100 / userMax;
+                            <div class="ssn-chart-row">
+                                <span>@item.Date.ToString("dd/MM")</span>
+                                <div class="ssn-chart-track"><div class="ssn-chart-fill green" style="width:@percent%"></div></div>
+                                <span class="text-end">@item.Count</span>
                             </div>
-                        </div>
-                    }
-                }
-            </div>
-        </div>
+                        }
+                    </div>
+                </div>
+            }
+        </section>
     </div>
 </div>

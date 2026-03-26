@@ -12,12 +12,12 @@ namespace StudentSocialNetwork.Api.Controllers;
 public class PostsController : ControllerBase
 {
     private readonly IPostService _postService;
-    private readonly IWebHostEnvironment _webHostEnvironment;
+    private readonly IImageStorageService _imageStorageService;
 
-    public PostsController(IPostService postService, IWebHostEnvironment webHostEnvironment)
+    public PostsController(IPostService postService, IImageStorageService imageStorageService)
     {
         _postService = postService;
-        _webHostEnvironment = webHostEnvironment;
+        _imageStorageService = imageStorageService;
     }
 
     [HttpGet]
@@ -50,7 +50,7 @@ public class PostsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<PostDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<PostDto>>> CreatePost([FromForm] CreatePostFormRequest request, CancellationToken cancellationToken)
     {
-        var imageUrl = await SaveImageIfProvidedAsync(request.Image, cancellationToken);
+        var imageUrl = await _imageStorageService.UploadPostImageAsync(request.Image, cancellationToken);
         var post = await _postService.CreatePostAsync(
             GetCurrentUserId(),
             new CreatePostDto
@@ -60,7 +60,7 @@ public class PostsController : ControllerBase
             },
             cancellationToken);
 
-        return Ok(ApiResponse.Ok(post, "Đã tạo bài viết. Bài viết đang chờ duyệt."));
+        return Ok(ApiResponse.Ok(post, "Đã tạo bài viết thành công."));
     }
 
     [HttpGet("{id:guid}")]
@@ -99,40 +99,6 @@ public class PostsController : ControllerBase
     {
         var liked = await _postService.ToggleLikeAsync(id, GetCurrentUserId(), cancellationToken);
         return Ok(ApiResponse.Ok<object>(new { liked }));
-    }
-
-    private async Task<string?> SaveImageIfProvidedAsync(IFormFile? file, CancellationToken cancellationToken)
-    {
-        if (file is null || file.Length == 0)
-        {
-            return null;
-        }
-
-        if (!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new ArgumentException("Chỉ hỗ trợ file ảnh.");
-        }
-
-        var webRoot = _webHostEnvironment.WebRootPath;
-        if (string.IsNullOrWhiteSpace(webRoot))
-        {
-            webRoot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
-        }
-
-        var folder = Path.Combine(webRoot, "uploads", "posts");
-        Directory.CreateDirectory(folder);
-
-        var extension = Path.GetExtension(file.FileName);
-        var safeExtension = string.IsNullOrWhiteSpace(extension) ? ".png" : extension;
-        var fileName = $"{Guid.NewGuid():N}{safeExtension}";
-        var absolutePath = Path.Combine(folder, fileName);
-
-        await using (var stream = System.IO.File.Create(absolutePath))
-        {
-            await file.CopyToAsync(stream, cancellationToken);
-        }
-
-        return $"{Request.Scheme}://{Request.Host}/uploads/posts/{fileName}";
     }
 
     private int GetCurrentUserId()

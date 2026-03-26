@@ -8,6 +8,6 @@ public class SettingsController : Controller
     [HttpGet("")]
     public IActionResult Index()
     {
-        return View();
+        return RedirectToAction("Settings", "Account");
     }
 }

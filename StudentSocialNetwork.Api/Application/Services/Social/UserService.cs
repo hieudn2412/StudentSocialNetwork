@@ -95,7 +95,7 @@ public class UserService : IUserService
         }
 
         return await query
-            .Where(x => x.Status == PostStatus.Approved)
+            .Where(x => x.Status != PostStatus.Rejected)
             .Select(x => x.ToPostDto(currentUserId))
             .ToListAsync(cancellationToken);
     }

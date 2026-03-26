@@ -98,4 +98,10 @@ public class HomeController : Controller
 
         return RedirectToAction(nameof(Index));
     }
+
+    [HttpGet("/home/trending")]
+    public IActionResult Trending()
+    {
+        return View();
+    }
 }

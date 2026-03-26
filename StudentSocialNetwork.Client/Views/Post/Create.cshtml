@@ -1,33 +1,35 @@
 @model PostCreateViewModel
 @{
-    ViewData["Title"] = "Create Post";
+    ViewData["Title"] = "Tạo bài viết";
 }
 
-<div class="row justify-content-center">
-    <div class="col-12 col-lg-8">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h2 class="h5 mb-3">Create Post</h2>
-
-                @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
-                {
-                    <div class="alert alert-danger">@Model.ErrorMessage</div>
-                }
-
-                <form method="post" enctype="multipart/form-data" asp-action="Create">
-                    @Html.AntiForgeryToken()
-                    <div class="mb-3">
-                        <label class="form-label">Content</label>
-                        <textarea class="form-control" asp-for="Content" rows="5" required></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Image</label>
-                        <input class="form-control" asp-for="Image" type="file" accept="image/*" />
-                    </div>
-                    <button class="btn btn-primary" type="submit">Publish</button>
-                    <a class="btn btn-outline-secondary" href="/">Cancel</a>
-                </form>
-            </div>
-        </div>
-    </div>
+<div class="ssn-page-header">
+    <h1>Tạo bài viết</h1>
+    <p>Chia sẻ nội dung mới lên bảng tin</p>
 </div>
+
+<section class="ssn-surface ssn-card-body">
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <form method="post" enctype="multipart/form-data" asp-action="Create" class="d-grid gap-3">
+        @Html.AntiForgeryToken()
+
+        <div>
+            <label class="form-label">Nội dung</label>
+            <textarea class="form-control" asp-for="Content" rows="7" placeholder="Bạn đang nghĩ gì?" required></textarea>
+        </div>
+
+        <div>
+            <label class="form-label">Hình ảnh</label>
+            <input class="form-control" asp-for="Image" type="file" accept="image/*" />
+        </div>
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Đăng bài</button>
+            <a class="btn btn-outline-secondary" href="/">Hủy</a>
+        </div>
+    </form>
+</section>

@@ -34,7 +34,13 @@ internal static partial class SocialMapping
             return query;
         }
 
-        return query.Where(x => x.Status == PostStatus.Approved);
+        if (currentUserId.HasValue)
+        {
+            var me = currentUserId.Value;
+            return query.Where(x => x.Status != PostStatus.Rejected || x.AuthorId == me);
+        }
+
+        return query.Where(x => x.Status != PostStatus.Rejected);
     }
 
     internal static PostDto ToPostDto(this Post post, int? currentUserId)

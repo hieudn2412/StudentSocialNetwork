@@ -1,44 +1,48 @@
-@model AccountRegisterViewModel
+﻿@model AccountRegisterViewModel
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Đăng ký";
+    ViewData["DisableAppShell"] = true;
 }
 
-<div class="row justify-content-center">
-    <div class="col-12 col-md-7 col-lg-6">
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <h2 class="h4 mb-3">Register</h2>
-
-                @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
-                {
-                    <div class="alert alert-danger">@Model.ErrorMessage</div>
-                }
-
-                <form method="post" asp-action="Register">
-                    @Html.AntiForgeryToken()
-                    <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input class="form-control" asp-for="Username" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input class="form-control" asp-for="FullName" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input class="form-control" asp-for="Email" type="email" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Password</label>
-                        <input class="form-control" asp-for="Password" type="password" required />
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Create account</button>
-                </form>
-
-                <p class="small text-muted mt-3 mb-0">
-                    Đã có tài khoản? <a href="/account/login">Đăng nhập</a>
-                </p>
-            </div>
-        </div>
+<section class="ssn-auth-card">
+    <div class="ssn-auth-brand">
+        <div class="ssn-auth-logo">F</div>
+        <h1 class="ssn-auth-title">Tạo tài khoản mới</h1>
+        <p class="ssn-auth-subtitle">Tham gia cộng đồng FPTSocial</p>
     </div>
-</div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <form method="post" asp-action="Register" class="d-grid gap-3">
+        @Html.AntiForgeryToken()
+
+        <div>
+            <label class="ssn-form-label">Username</label>
+            <input class="form-control ssn-form-control" asp-for="Username" required />
+        </div>
+
+        <div>
+            <label class="ssn-form-label">Họ và tên</label>
+            <input class="form-control ssn-form-control" asp-for="FullName" />
+        </div>
+
+        <div>
+            <label class="ssn-form-label">Email</label>
+            <input class="form-control ssn-form-control" asp-for="Email" type="email" required />
+        </div>
+
+        <div>
+            <label class="ssn-form-label">Mật khẩu</label>
+            <input class="form-control ssn-form-control" asp-for="Password" type="password" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Tạo tài khoản</button>
+    </form>
+
+    <div class="ssn-auth-footer">
+        Đã có tài khoản? <a href="/account/login">Đăng nhập</a>
+    </div>
+</section>

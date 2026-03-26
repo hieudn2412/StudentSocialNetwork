@@ -1,52 +1,90 @@
-@model AdminUsersViewModel
+﻿@model AdminUsersViewModel
 @{
-    ViewData["Title"] = "Manage Users";
+    ViewData["Title"] = "Quản lý người dùng";
+    var filterQuery = Model.IsActiveFilter is null ? string.Empty : Model.IsActiveFilter.Value.ToString().ToLowerInvariant();
 }
 
-<h1 class="h4 mb-3">Manage Users</h1>
+<div class="ssn-page-header">
+    <h1>Quản trị hệ thống</h1>
+    <p>Quản lý tài khoản người dùng trong mạng xã hội nội bộ</p>
+</div>
 
-<form method="get" class="mb-3 d-flex gap-2">
-    <select class="form-select w-auto" name="isActive">
-        <option value="" selected="@(Model.IsActiveFilter is null)">All</option>
-        <option value="true" selected="@(Model.IsActiveFilter == true)">Active</option>
-        <option value="false" selected="@(Model.IsActiveFilter == false)">Locked</option>
-    </select>
-    <button class="btn btn-primary" type="submit">Filter</button>
-</form>
+<div class="ssn-admin-tabs">
+    <a class="ssn-admin-tab" href="/admin/dashboard">Tổng quan</a>
+    <a class="ssn-admin-tab active" href="/admin/users">Quản lý người dùng</a>
+    <a class="ssn-admin-tab" href="/admin/posts">Quản lý bài viết</a>
+    <a class="ssn-admin-tab" href="/admin/reports">Báo cáo</a>
+</div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
+<section class="ssn-surface ssn-card-body">
+    <div class="ssn-toolbar">
+        <h2 class="ssn-section-title">Danh sách người dùng</h2>
+        <form method="get" class="d-flex gap-2 align-items-center">
+            <select class="form-select ssn-form-select" name="isActive">
+                <option value="" selected="@(Model.IsActiveFilter is null)">Tất cả</option>
+                <option value="true" selected="@(Model.IsActiveFilter == true)">Đang hoạt động</option>
+                <option value="false" selected="@(Model.IsActiveFilter == false)">Đã khoá</option>
+            </select>
+            <button class="btn btn-outline-secondary" type="submit">Lọc</button>
+        </form>
+    </div>
+
+    @if (Model.Users.Count == 0)
+    {
+        <div class="ssn-empty">Không có dữ liệu người dùng.</div>
+    }
+    else
+    {
         <div class="table-responsive">
-            <table class="table table-striped align-middle">
+            <table class="ssn-table">
                 <thead>
                     <tr>
-                        <th>User</th>
+                        <th>Người dùng</th>
                         <th>Email</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th></th>
+                        <th>Chuyên ngành</th>
+                        <th>Người theo dõi</th>
+                        <th>Vai trò</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
-                @foreach (var user in Model.Users)
-                {
-                    <tr>
-                        <td>@user.Username</td>
-                        <td>@user.Email</td>
-                        <td>@user.Role</td>
-                        <td>@(user.IsActive ? "Active" : "Locked")</td>
-                        <td class="text-end">
-                            <form method="post" action="/admin/users/@user.Id/toggle-active?isActive=@Model.IsActiveFilter">
-                                @Html.AntiForgeryToken()
-                                <button class="btn btn-sm @(user.IsActive ? "btn-outline-danger" : "btn-outline-success")" type="submit">
-                                    @(user.IsActive ? "Lock" : "Unlock")
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                }
+                    @foreach (var user in Model.Users)
+                    {
+                        var displayName = !string.IsNullOrWhiteSpace(user.FullName) ? user.FullName : user.Username;
+                        var avatar = string.IsNullOrWhiteSpace(displayName) ? "U" : displayName.Trim()[0].ToString().ToUpperInvariant();
+
+                        <tr>
+                            <td>
+                                <div class="ssn-table-user">
+                                    <span class="ssn-table-avatar">@avatar</span>
+                                    <div>
+                                        <div class="fw-semibold">@displayName</div>
+                                        <div class="ssn-muted">@@@user.Username</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>@user.Email</td>
+                            <td>@(string.IsNullOrWhiteSpace(user.Major) ? "-" : user.Major)</td>
+                            <td>@user.FollowersCount</td>
+                            <td>@user.Role</td>
+                            <td>
+                                <span class="ssn-status-pill @(user.IsActive ? "ssn-status-active" : "ssn-status-locked")">
+                                    @(user.IsActive ? "Hoạt động" : "Đã khoá")
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <form method="post" action="/admin/users/@user.Id/toggle-active@(string.IsNullOrWhiteSpace(filterQuery) ? string.Empty : $"?isActive={filterQuery}")">
+                                    @Html.AntiForgeryToken()
+                                    <button class="btn btn-sm @(user.IsActive ? "btn-outline-danger" : "btn-outline-success")" type="submit">
+                                        @(user.IsActive ? "Khoá" : "Mở khoá")
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         </div>
-    </div>
-</div>
+    }
+</section>

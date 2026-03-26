@@ -1,25 +1,26 @@
-@model AccountLoginViewModel
+﻿@model AccountLoginViewModel
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Đăng nhập";
+    ViewData["DisableAppShell"] = true;
 }
 
-<div class="row justify-content-center">
-    <div class="col-12 col-md-6 col-lg-5">
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <h2 class="h4 mb-3">Login</h2>
-                <p class="text-muted">Hệ thống nội bộ chỉ hỗ trợ đăng nhập bằng tài khoản Google.</p>
-
-                @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
-                {
-                    <div class="alert alert-danger">@Model.ErrorMessage</div>
-                }
-
-                <a class="btn btn-danger w-100"
-                   href="@Url.Action("LoginGoogle", "Auth", new { returnUrl = Model.ReturnUrl })">
-                    Continue with Google
-                </a>
-            </div>
-        </div>
+<section class="ssn-auth-card">
+    <div class="ssn-auth-brand">
+        <div class="ssn-auth-logo">F</div>
+        <h1 class="ssn-auth-title">FPT<span class="ssn-brand-accent">Social</span></h1>
+        <p class="ssn-auth-subtitle">Hệ thống nội bộ - chỉ hỗ trợ đăng nhập bằng Gmail của trường</p>
     </div>
-</div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <a class="btn btn-danger w-100 py-2" href="@Url.Action("LoginGoogle", "Auth", new { returnUrl = Model.ReturnUrl })">
+        Tiếp tục với Google
+    </a>
+
+    <div class="ssn-auth-footer">
+        Chưa có tài khoản? <a href="/account/register">Đăng ký</a>
+    </div>
+</section>

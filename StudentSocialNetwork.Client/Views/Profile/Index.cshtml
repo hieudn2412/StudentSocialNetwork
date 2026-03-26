@@ -1,6 +1,6 @@
 @model ProfilePageViewModel
 @{
-    ViewData["Title"] = "Profile";
+    ViewData["Title"] = "Trang cá nhân";
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
@@ -10,69 +10,94 @@
 
 @if (Model.User is null)
 {
-    <div class="alert alert-warning">User not found.</div>
+    <div class="ssn-surface ssn-empty">Không tìm thấy người dùng.</div>
 }
 else
 {
-    <div class="row g-4">
-        <div class="col-12 col-lg-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h2 class="h5 mb-2">@Model.User.Username</h2>
-                    <div class="text-muted mb-3">@Model.User.FullName</div>
-                    @if (!string.IsNullOrWhiteSpace(Model.User.AvatarUrl))
-                    {
-                        <img src="@Model.User.AvatarUrl" class="img-fluid rounded mb-3" alt="Avatar" />
-                    }
-                    @if (!string.IsNullOrWhiteSpace(Model.User.Bio))
-                    {
-                        <p>@Model.User.Bio</p>
-                    }
-                    <div class="small text-muted">Class: @Model.User.ClassName</div>
-                    <div class="small text-muted">Major: @Model.User.Major</div>
-                    <div class="small text-muted">Interests: @Model.User.Interests</div>
-                    <hr />
-                    <div class="small">Followers: <strong>@Model.User.FollowersCount</strong></div>
-                    <div class="small">Following: <strong>@Model.User.FollowingCount</strong></div>
+    var displayName = !string.IsNullOrWhiteSpace(Model.User.FullName) ? Model.User.FullName : Model.User.Username;
+    var avatar = string.IsNullOrWhiteSpace(displayName) ? "U" : displayName.Trim()[0].ToString().ToUpperInvariant();
+    var interests = (Model.User.Interests ?? string.Empty)
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-                    @if (!Model.IsCurrentUser && User.Identity?.IsAuthenticated == true)
+    <section class="ssn-surface ssn-profile-hero mb-3">
+        <div class="ssn-profile-cover"></div>
+        <div class="ssn-profile-content">
+            <div class="ssn-profile-top">
+                <span class="ssn-profile-avatar">@avatar</span>
+                @if (Model.IsCurrentUser)
+                {
+                    <a class="btn btn-primary" href="/account/settings">Chỉnh sửa trang cá nhân</a>
+                }
+                else if (User.Identity?.IsAuthenticated == true)
+                {
+                    <form method="post" action="/profile/@Model.User.Id/follow">
+                        @Html.AntiForgeryToken()
+                        <button class="btn @(Model.IsFollowing ? "btn-outline-danger" : "btn-primary")" type="submit">
+                            @(Model.IsFollowing ? "Bỏ theo dõi" : "Theo dõi")
+                        </button>
+                    </form>
+                }
+            </div>
+
+            <h1 class="ssn-profile-name">@displayName</h1>
+            <div class="ssn-profile-username">@@@Model.User.Username</div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.User.Bio))
+            {
+                <p class="ssn-profile-bio">@Model.User.Bio</p>
+            }
+
+            <div class="ssn-profile-meta">
+                @if (!string.IsNullOrWhiteSpace(Model.User.Major))
+                {
+                    <span>@Model.User.Major</span>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.User.ClassName))
+                {
+                    <span>• @Model.User.ClassName</span>
+                }
+                <span>• Tham gia từ @Model.User.CreatedAt.ToLocalTime().ToString("MM/yyyy")</span>
+            </div>
+
+            @if (interests.Length > 0)
+            {
+                <div class="ssn-chip-wrap">
+                    @foreach (var interest in interests)
                     {
-                        <form method="post" action="/profile/@Model.User.Id/follow" class="mt-3">
-                            @Html.AntiForgeryToken()
-                            <button class="btn btn-sm @(Model.IsFollowing ? "btn-outline-danger" : "btn-primary")" type="submit">
-                                @(Model.IsFollowing ? "Unfollow" : "Follow")
-                            </button>
-                        </form>
+                        <span class="ssn-chip">@interest</span>
                     }
                 </div>
-            </div>
-        </div>
+            }
 
-        <div class="col-12 col-lg-8">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h3 class="h6 mb-3">Posts</h3>
-                    @if (Model.Posts.Count == 0)
-                    {
-                        <div class="text-muted">No posts.</div>
-                    }
-                    else
-                    {
-                        foreach (var post in Model.Posts)
-                        {
-                            <div class="border rounded p-3 mb-3">
-                                <div class="d-flex justify-content-between">
-                                    <div class="small text-muted">@post.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
-                                    <span class="badge bg-secondary">@post.Status</span>
-                                </div>
-                                <div class="mt-2">@post.Content</div>
-                                <div class="small text-muted mt-2">Likes: @post.LikeCount | Comments: @post.CommentCount</div>
-                                <a class="btn btn-sm btn-outline-primary mt-2" href="/post/@post.Id">View detail</a>
-                            </div>
-                        }
-                    }
-                </div>
+            <div class="ssn-stats-inline">
+                <span><strong>@Model.User.FollowersCount</strong> Người theo dõi</span>
+                <span><strong>@Model.User.FollowingCount</strong> Đang theo dõi</span>
+                <span><strong>@Model.Posts.Count</strong> Bài viết</span>
             </div>
         </div>
-    </div>
+    </section>
+
+    <section class="ssn-surface ssn-card-body">
+        <h2 class="ssn-section-title">Bài viết</h2>
+        <p class="ssn-subtitle">Những bài viết gần đây của @displayName</p>
+
+        @if (Model.Posts.Count == 0)
+        {
+            <div class="ssn-empty">Chưa có bài viết nào.</div>
+        }
+        else
+        {
+            foreach (var post in Model.Posts)
+            {
+                <article class="ssn-surface ssn-card-body mb-2">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div class="ssn-muted">@post.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                    </div>
+                    <div class="ssn-post-content">@post.Content</div>
+                    <div class="ssn-muted mb-2">♥ @post.LikeCount • 💬 @post.CommentCount</div>
+                    <a class="btn btn-sm btn-outline-primary" href="/post/@post.Id">Xem chi tiết</a>
+                </article>
+            }
+        }
+    </section>
 }

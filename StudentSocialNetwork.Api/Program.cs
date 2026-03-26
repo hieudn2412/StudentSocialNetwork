@@ -22,6 +22,7 @@ using StudentSocialNetwork.Api.Infrastructure.Persistence;
 using StudentSocialNetwork.Api.Infrastructure.Realtime;
 using StudentSocialNetwork.Api.Infrastructure.Repositories;
 using StudentSocialNetwork.Api.Infrastructure.Security;
+using StudentSocialNetwork.Api.Infrastructure.Storage;
 using StudentSocialNetwork.Api.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -95,6 +96,7 @@ builder.Services.AddDbContext<ChatDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("LocalDb")));
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
+builder.Services.Configure<CloudinaryOptions>(builder.Configuration.GetSection(CloudinaryOptions.SectionName));
 
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
 if (string.IsNullOrWhiteSpace(jwtOptions.Key))
@@ -179,6 +181,7 @@ builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IFollowService, FollowService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IImageStorageService, CloudinaryImageStorageService>();
 
 var app = builder.Build();
 

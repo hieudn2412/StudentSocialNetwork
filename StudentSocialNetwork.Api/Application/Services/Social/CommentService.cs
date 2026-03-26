@@ -40,7 +40,7 @@ public class CommentService : ICommentService
         var post = await _dbContext.Posts.FirstOrDefaultAsync(x => x.Id == postId, cancellationToken)
             ?? throw new KeyNotFoundException("Không tìm thấy bài viết.");
 
-        if (post.Status != PostStatus.Approved && post.AuthorId != authorId)
+        if (post.Status == PostStatus.Rejected && post.AuthorId != authorId)
         {
             throw new ForbiddenException("Bạn không thể bình luận bài viết này.");
         }

@@ -8,7 +8,7 @@ public class Post
     public string Content { get; set; } = string.Empty;
     public string? ImageUrl { get; set; }
     public string Hashtags { get; set; } = string.Empty;
-    public PostStatus Status { get; set; } = PostStatus.Pending;
+    public PostStatus Status { get; set; } = PostStatus.Approved;
     public int AuthorId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

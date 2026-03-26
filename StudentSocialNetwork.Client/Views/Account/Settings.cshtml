@@ -1,74 +1,95 @@
-@model AccountSettingsViewModel
+﻿@model AccountSettingsViewModel
 @{
-    ViewData["Title"] = "Account Settings";
+    ViewData["Title"] = "Cài đặt tài khoản";
 }
 
-<div class="row">
-    <div class="col-12 col-lg-8">
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h2 class="h5 mb-3">Profile Settings</h2>
-
-                @if (!string.IsNullOrWhiteSpace(Model.Message))
-                {
-                    <div class="alert alert-success">@Model.Message</div>
-                }
-                @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
-                {
-                    <div class="alert alert-danger">@Model.ErrorMessage</div>
-                }
-
-                <form method="post" asp-action="Settings">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" asp-for="UserId" />
-                    <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input class="form-control" asp-for="Username" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input class="form-control" asp-for="Email" readonly />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input class="form-control" asp-for="FullName" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Avatar URL</label>
-                        <input class="form-control" asp-for="AvatarUrl" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Bio</label>
-                        <textarea class="form-control" asp-for="Bio" rows="3"></textarea>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Class</label>
-                            <input class="form-control" asp-for="ClassName" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Major</label>
-                            <input class="form-control" asp-for="Major" />
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Interests</label>
-                        <input class="form-control" asp-for="Interests" />
-                    </div>
-
-                    <hr />
-                    <h3 class="h6">Change Password</h3>
-                    <div class="mb-3">
-                        <label class="form-label">Current Password</label>
-                        <input class="form-control" asp-for="CurrentPassword" type="password" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">New Password</label>
-                        <input class="form-control" asp-for="NewPassword" type="password" />
-                    </div>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </form>
-            </div>
-        </div>
-    </div>
+<div class="ssn-page-header">
+    <h1>Cài đặt tài khoản</h1>
+    <p>Cập nhật hồ sơ cá nhân và đổi mật khẩu</p>
 </div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-success">@Model.Message</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<form method="post" asp-action="Settings">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="UserId" />
+
+    <div class="ssn-settings-grid">
+        <section class="ssn-surface ssn-card-body">
+            <h2 class="ssn-section-title">Thông tin cá nhân</h2>
+            <p class="ssn-subtitle">Những thông tin hiển thị trên trang profile</p>
+
+            <div class="d-grid gap-3 mt-3">
+                <div>
+                    <label class="ssn-form-label">Username</label>
+                    <input class="form-control ssn-form-control" asp-for="Username" required />
+                </div>
+
+                <div>
+                    <label class="ssn-form-label">Email</label>
+                    <input class="form-control ssn-form-control" asp-for="Email" readonly />
+                </div>
+
+                <div>
+                    <label class="ssn-form-label">Họ và tên</label>
+                    <input class="form-control ssn-form-control" asp-for="FullName" />
+                </div>
+
+                <div>
+                    <label class="ssn-form-label">Avatar URL</label>
+                    <input class="form-control ssn-form-control" asp-for="AvatarUrl" />
+                </div>
+
+                <div>
+                    <label class="ssn-form-label">Bio</label>
+                    <textarea class="form-control ssn-form-control ssn-form-textarea" asp-for="Bio"></textarea>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="ssn-form-label">Lớp</label>
+                        <input class="form-control ssn-form-control" asp-for="ClassName" />
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="ssn-form-label">Chuyên ngành</label>
+                        <input class="form-control ssn-form-control" asp-for="Major" />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="ssn-form-label">Interests</label>
+                    <input class="form-control ssn-form-control" asp-for="Interests" placeholder="ReactJS, NodeJS, AI" />
+                </div>
+            </div>
+        </section>
+
+        <section class="ssn-surface ssn-card-body">
+            <h2 class="ssn-section-title">Đổi mật khẩu</h2>
+            <p class="ssn-subtitle">Để trống nếu chưa muốn thay đổi</p>
+
+            <div class="d-grid gap-3 mt-3">
+                <div>
+                    <label class="ssn-form-label">Mật khẩu hiện tại</label>
+                    <input class="form-control ssn-form-control" asp-for="CurrentPassword" type="password" />
+                </div>
+
+                <div>
+                    <label class="ssn-form-label">Mật khẩu mới</label>
+                    <input class="form-control ssn-form-control" asp-for="NewPassword" type="password" />
+                </div>
+            </div>
+
+            <div class="mt-4 d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                <a class="btn btn-outline-secondary" href="/profile/@Model.UserId">Quay lại hồ sơ</a>
+            </div>
+        </section>
+    </div>
+</form>
