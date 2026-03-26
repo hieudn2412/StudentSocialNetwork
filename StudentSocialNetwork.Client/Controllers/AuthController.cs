@@ -44,6 +44,12 @@ public class AuthController : Controller
         return View();
     }
 
+    [HttpGet("register")]
+    public IActionResult Register()
+    {
+        return View();
+    }
+
     [HttpGet("logout")]
     public IActionResult Logout()
     {
@@ -151,7 +157,7 @@ public class AuthController : Controller
 
         WriteOAuthBootstrapCookie(envelope.Data);
 
-        return Redirect("/conversations");
+        return Redirect("/home");
     }
 
     private static OAuthProfile BuildOAuthProfile(string provider, ClaimsPrincipal principal, AuthenticationProperties? properties)
