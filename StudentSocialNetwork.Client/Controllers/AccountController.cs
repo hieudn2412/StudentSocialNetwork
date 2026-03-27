@@ -44,6 +44,32 @@ public class AccountController : Controller
         });
     }
 
+    [HttpGet("/admin/login")]
+    [AllowAnonymous]
+    public IActionResult AdminLogin([FromQuery] string? error = null, [FromQuery(Name = "ReturnUrl")] string? returnUrl = null)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            if (User.IsInRole(nameof(UserRole.Admin)))
+            {
+                if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
+
+                return RedirectToAction("Dashboard", "Admin");
+            }
+
+            return RedirectToAction("Index", "Home");
+        }
+
+        return View("~/Views/Admin/Login.cshtml", new AccountLoginViewModel
+        {
+            ErrorMessage = string.IsNullOrWhiteSpace(error) ? null : error,
+            ReturnUrl = string.IsNullOrWhiteSpace(returnUrl) ? "/admin/dashboard" : returnUrl
+        });
+    }
+
     [HttpPost("login")]
     [AllowAnonymous]
     [ValidateAntiForgeryToken]
@@ -75,6 +101,52 @@ public class AccountController : Controller
         {
             model.ErrorMessage = ex.Message;
             return View(model);
+        }
+    }
+
+    [HttpPost("/admin/login")]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AdminLogin(AccountLoginViewModel model, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View("~/Views/Admin/Login.cshtml", model);
+        }
+
+        try
+        {
+            var token = await _authService.LoginAsync(new LoginDto
+            {
+                Email = model.Email,
+                Password = model.Password
+            }, cancellationToken);
+
+            if (token is null)
+            {
+                model.ErrorMessage = "Đăng nhập thất bại.";
+                return View("~/Views/Admin/Login.cshtml", model);
+            }
+
+            if (token.Role != UserRole.Admin)
+            {
+                model.ErrorMessage = "Tài khoản này không có quyền quản trị.";
+                return View("~/Views/Admin/Login.cshtml", model);
+            }
+
+            await SignInAsync(token);
+
+            if (!string.IsNullOrWhiteSpace(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
+            {
+                return Redirect(model.ReturnUrl);
+            }
+
+            return RedirectToAction("Dashboard", "Admin");
+        }
+        catch (ApiClientException ex)
+        {
+            model.ErrorMessage = ex.Message;
+            return View("~/Views/Admin/Login.cshtml", model);
         }
     }
 

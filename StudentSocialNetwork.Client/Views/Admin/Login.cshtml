@@ -1,0 +1,39 @@
+@model AccountLoginViewModel
+@{
+    ViewData["Title"] = "Admin Login";
+    ViewData["DisableAppShell"] = true;
+}
+
+<section class="ssn-auth-card">
+    <div class="ssn-auth-brand">
+        <div class="ssn-auth-logo">F</div>
+        <h1 class="ssn-auth-title">Admin Portal</h1>
+        <p class="ssn-auth-subtitle">Dang nhap khu vuc quan tri bang tai khoan admin.</p>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <form method="post" action="/admin/login" class="d-grid gap-3">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ReturnUrl" />
+
+        <div>
+            <label class="ssn-form-label">Email admin</label>
+            <input class="form-control ssn-form-control" asp-for="Email" type="email" required />
+        </div>
+
+        <div>
+            <label class="ssn-form-label">Mat khau</label>
+            <input class="form-control ssn-form-control" asp-for="Password" type="password" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Dang nhap admin</button>
+    </form>
+
+    <div class="ssn-auth-footer">
+        Sinh vien dang nhap tai <a href="/account/login">trang dang nhap Google</a>
+    </div>
+</section>

@@ -70,6 +70,35 @@ builder.Services
         options.AccessDeniedPath = "/account/login";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnRedirectToLogin = context =>
+            {
+                if (context.Request.Path.StartsWithSegments("/admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Response.Redirect($"/admin/login?ReturnUrl={Uri.EscapeDataString(context.Request.Path + context.Request.QueryString)}");
+                }
+                else
+                {
+                    context.Response.Redirect(context.RedirectUri);
+                }
+
+                return Task.CompletedTask;
+            },
+            OnRedirectToAccessDenied = context =>
+            {
+                if (context.Request.Path.StartsWithSegments("/admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Response.Redirect("/admin/login?error=Bạn không có quyền truy cập khu vực quản trị.");
+                }
+                else
+                {
+                    context.Response.Redirect(context.RedirectUri);
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     })
     .AddCookie(externalOAuthScheme, options =>
     {
